@@ -1,21 +1,19 @@
 use actix_web::{guard, web, web::Data, App, HttpResponse, HttpServer, Result};
-use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
-use hub_core::{
-    async_graphql::{
-        extensions,
-        http::{playground_source, GraphQLPlaygroundConfig},
-        EmptySubscription, Schema,
-    },
-    db::Connection,
-    prelude::info,
+use async_graphql::{
+    extensions,
+    http::{playground_source, GraphQLPlaygroundConfig},
+    EmptySubscription, Schema,
 };
+use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
+use db::client::Connection;
+use graphql::{mutation_root::MutationRoot, query_root::QueryRoot};
+use hub_orgs::{
+    db::{self},
+    graphql,
+};
+use log::info;
 
-mod mutations;
-mod queries;
-
-use mutations::Mutation;
-use queries::Query;
-pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
+pub type AppSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
 
 /// Builds the GraphQL Schema, attaching the Database to the context
 pub async fn build_schema() -> Result<AppSchema> {
@@ -23,10 +21,14 @@ pub async fn build_schema() -> Result<AppSchema> {
 
     // todo! Shared struct instead of db
 
-    let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
-        .extension(extensions::Logger)
-        .data(db)
-        .finish();
+    let schema = Schema::build(
+        QueryRoot::default(),
+        MutationRoot::default(),
+        EmptySubscription,
+    )
+    .extension(extensions::Logger)
+    .data(db)
+    .finish();
 
     Ok(schema)
 }

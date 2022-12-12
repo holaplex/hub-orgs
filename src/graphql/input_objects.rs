@@ -1,8 +1,6 @@
-use hub_core::{
-    async_graphql::{self, InputObject},
-    db::entities::organizations,
-    prelude::*,
-};
+use async_graphql::{self, InputObject};
+
+use crate::{entities::organizations, prelude::*};
 
 #[derive(InputObject)]
 pub struct CreateOrganizationInput {

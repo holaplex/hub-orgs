@@ -1,14 +1,8 @@
-use std::time::Duration;
-
 pub use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 pub use sea_orm_migration::prelude::*;
-pub mod entities;
-pub mod migrations;
-pub mod mutation;
-pub mod query;
-use clap::Parser;
 
-use crate::prelude::*;
+use crate::{migration, prelude::*};
+
 /// Arguments for establishing a database connection
 #[derive(Debug, Parser)]
 pub struct Args {
@@ -48,7 +42,7 @@ impl Connection {
             .context("failed to get database connection")?;
 
         debug!("running migrations..");
-        cli::run_cli(migrations::Migrator).await;
+        cli::run_cli(migration::Migrator).await;
 
         Ok(Self(db))
     }

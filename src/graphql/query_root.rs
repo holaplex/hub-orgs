@@ -1,14 +1,13 @@
-use hub_core::{
-    async_graphql,
-    async_graphql::{Context, Object, Result},
-    db::{entities::organizations, query::Query, DatabaseConnection},
-};
+use async_graphql::{self, Context, Object, Result};
+use sea_orm::DatabaseConnection;
+
+use crate::{db::query::Query, entities::organizations};
 
 #[derive(Default)]
-pub struct OrganizationQuery;
+pub struct QueryRoot;
 
 #[Object]
-impl OrganizationQuery {
+impl QueryRoot {
     async fn get_organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 

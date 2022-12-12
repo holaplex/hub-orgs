@@ -1,19 +1,18 @@
-use hub_core::{
-    async_graphql::{self, Context, Object, Result},
-    db::{entities::organizations, mutation::Mutation, DatabaseConnection},
-};
+use async_graphql::{self, Context, Object, Result};
+use sea_orm::DatabaseConnection;
 
-use super::objects;
+use super::input_objects::CreateOrganizationInput;
+use crate::{db::mutation::Mutation, entities::organizations};
 
 #[derive(Default)]
-pub struct OrganizationMutation;
+pub struct MutationRoot;
 
 #[Object]
-impl OrganizationMutation {
+impl MutationRoot {
     pub async fn create_organization(
         &self,
         ctx: &Context<'_>,
-        input: objects::organization::CreateOrganizationInput,
+        input: CreateOrganizationInput,
     ) -> Result<organizations::Model> {
         let db = ctx.data::<DatabaseConnection>()?;
         // let conn = db.get();

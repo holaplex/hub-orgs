@@ -1,6 +1,6 @@
 use sea_orm::*;
 
-use super::entities::{organizations, organizations::Entity as Organization};
+use crate::entities::{organizations, organizations::Entity as Organization};
 
 pub struct Query;
 
