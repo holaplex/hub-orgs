@@ -57,7 +57,11 @@ pub async fn main() -> Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(schema.clone()))
-            .service(web::resource("/graphql").guard(guard::Post()).to(graphql_handler))
+            .service(
+                web::resource("/graphql")
+                    .guard(guard::Post())
+                    .to(graphql_handler),
+            )
             .service(
                 web::resource("/graphql/playground")
                     .guard(guard::Get())
