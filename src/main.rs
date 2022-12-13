@@ -5,15 +5,10 @@ use async_graphql::{
     EmptySubscription, Schema,
 };
 use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
-use db::client::Connection;
-use graphql::{mutation_root::MutationRoot, query_root::QueryRoot};
-use hub_orgs::{
-    db::{self},
-    graphql,
-};
+use hub_orgs::{db::Connection, mutations::Mutation, queries::Query};
 use log::info;
 
-pub type AppSchema = Schema<QueryRoot, MutationRoot, EmptySubscription>;
+pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
 
 /// Builds the GraphQL Schema, attaching the Database to the context
 pub async fn build_schema() -> Result<AppSchema> {
@@ -21,14 +16,10 @@ pub async fn build_schema() -> Result<AppSchema> {
 
     // todo! Shared struct instead of db
 
-    let schema = Schema::build(
-        QueryRoot::default(),
-        MutationRoot::default(),
-        EmptySubscription,
-    )
-    .extension(extensions::Logger)
-    .data(db)
-    .finish();
+    let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
+        .extension(extensions::Logger)
+        .data(db)
+        .finish();
 
     Ok(schema)
 }

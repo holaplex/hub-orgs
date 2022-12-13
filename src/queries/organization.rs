@@ -1,17 +1,19 @@
 use async_graphql::{self, Context, Object, Result};
-use sea_orm::DatabaseConnection;
+use sea_orm::{DatabaseConnection, EntityTrait};
 
-use crate::{db::query::Query, entities::organizations};
-
+use crate::entities::organizations;
 #[derive(Default)]
-pub struct QueryRoot;
+pub struct OrganizationQuery;
 
 #[Object]
-impl QueryRoot {
+impl OrganizationQuery {
     async fn get_organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 
-        Query::get_all_organizations(db).await.map_err(Into::into)
+        organizations::Entity::find()
+            .all(db)
+            .await
+            .map_err(Into::into)
     }
 
     async fn get_organization_by_id(
@@ -21,7 +23,8 @@ impl QueryRoot {
     ) -> Result<Option<organizations::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 
-        Query::find_organization_by_id(db, id)
+        organizations::Entity::find_by_id(id)
+            .one(db)
             .await
             .map_err(Into::into)
     }

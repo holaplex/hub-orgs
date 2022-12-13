@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:15.1
+    container_name: hub_orgs_dev_db
+    environment:
+      - POSTGRES_DB=DATABASE_NAME
+      - POSTGRES_PASSWORD=DATABASE_PASSWORD
+    ports:
+      - '5437:5432'
+    volumes: 
+      - hub_orgs_db:/var/lib/postgresql/data
+volumes:
+  hub_orgs_db:
+    driver: local

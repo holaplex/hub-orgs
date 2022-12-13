@@ -1,6 +1,7 @@
 pub mod db;
 pub mod entities;
-pub mod graphql;
+pub mod mutations;
+pub mod queries;
 
 #[path = "../migration/mod.rs"]
 mod migration;
