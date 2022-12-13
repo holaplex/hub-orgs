@@ -17,7 +17,7 @@ impl MutationRoot {
         let db = ctx.data::<DatabaseConnection>()?;
         // let conn = db.get();
 
-        Mutation::create_organization(db, input.into_model())
+        Mutation::create_resource(db, input.into_active_model())
             .await
             .map_err(Into::into)
     }
