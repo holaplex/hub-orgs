@@ -13,7 +13,8 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub name: String,
     pub created_at: DateTime,
-    pub deactivated_at: DateTime,
+    #[sea_orm(nullable)]
+    pub deactivated_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
