@@ -7,7 +7,7 @@ pub struct OrganizationQuery;
 
 #[Object]
 impl OrganizationQuery {
-    async fn get_organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
+    async fn organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 
         organizations::Entity::find()
@@ -16,7 +16,7 @@ impl OrganizationQuery {
             .map_err(Into::into)
     }
 
-    async fn get_organization_by_id(
+    async fn organization(
         &self,
         ctx: &Context<'_>,
         id: i32,

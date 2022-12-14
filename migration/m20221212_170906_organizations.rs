@@ -9,28 +9,28 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Organization::Table)
+                    .table(Organizations::Table)
                     .if_not_exists()
                     .col(
-                        ColumnDef::new(Organization::Id)
+                        ColumnDef::new(Organizations::Id)
                             .uuid()
                             .not_null()
                             .primary_key()
                             .extra("default gen_random_uuid()".to_string()),
                     )
                     .col(
-                        ColumnDef::new(Organization::Name)
+                        ColumnDef::new(Organizations::Name)
                             .string()
                             .not_null()
                             .unique_key(),
                     )
                     .col(
-                        ColumnDef::new(Organization::CreatedAt)
+                        ColumnDef::new(Organizations::CreatedAt)
                             .timestamp()
                             .not_null()
                             .extra("default now()".to_string()),
                     )
-                    .col(ColumnDef::new(Organization::DeactivatedAt).timestamp())
+                    .col(ColumnDef::new(Organizations::DeactivatedAt).timestamp())
                     .to_owned(),
             )
             .await
@@ -38,13 +38,13 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_table(Table::drop().table(Organization::Table).to_owned())
+            .drop_table(Table::drop().table(Organizations::Table).to_owned())
             .await
     }
 }
 
 #[derive(Iden)]
-enum Organization {
+enum Organizations {
     Table,
     Id,
     Name,

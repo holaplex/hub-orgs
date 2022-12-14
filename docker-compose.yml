@@ -4,8 +4,8 @@ services:
     image: postgres:15.1
     container_name: hub_orgs_dev_db
     environment:
-      - POSTGRES_DB=DATABASE_NAME
-      - POSTGRES_PASSWORD=DATABASE_PASSWORD
+      - POSTGRES_DB=${DATABASE_NAME}
+      - POSTGRES_PASSWORD=${DATABASE_PASSWORD}
     ports:
       - '5437:5432'
     volumes: 

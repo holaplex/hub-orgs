@@ -42,7 +42,7 @@ impl Connection {
             .context("failed to get database connection")?;
 
         debug!("running migrations..");
-        cli::run_cli(migration::Migrator).await;
+        migration::Migrator::up(&db, None).await?;
 
         Ok(Self(db))
     }

@@ -1,18 +1,20 @@
-use actix_web::{guard, web, web::Data, App, HttpResponse, HttpServer, Result};
 use async_graphql::{
     extensions,
     http::{playground_source, GraphQLPlaygroundConfig},
     EmptySubscription, Schema,
 };
-use async_graphql_actix_web::{GraphQLRequest, GraphQLResponse};
-use hub_orgs::{db::Connection, mutations::Mutation, queries::Query};
+use async_graphql_poem::GraphQL;
+use hub_orgs::{db::Connection, mutations::Mutation, prelude::*, queries::Query};
 use log::info;
+use poem::{get, handler, listener::TcpListener, post, web::Html, IntoResponse, Route, Server};
 
 pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
 
 /// Builds the GraphQL Schema, attaching the Database to the context
 pub async fn build_schema() -> Result<AppSchema> {
-    let db = Connection::new().await.unwrap().get();
+    let db = Connection::new()
+        .await
+        .context("failed to get db connection")?;
 
     // todo! Shared struct instead of db
 
@@ -24,45 +26,43 @@ pub async fn build_schema() -> Result<AppSchema> {
     Ok(schema)
 }
 
-async fn graphql_handler(schema: web::Data<AppSchema>, req: GraphQLRequest) -> GraphQLResponse {
-    schema.execute(req.into_inner()).await.into()
-}
-
-async fn graphql_playground() -> Result<HttpResponse> {
-    Ok(HttpResponse::Ok()
-        .content_type("text/html; charset=utf-8")
-        .body(playground_source(GraphQLPlaygroundConfig::new("/graphql"))))
+#[handler]
+async fn playground() -> impl IntoResponse {
+    Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
 }
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
+    // todo! depends on core crate
     if cfg!(debug_assertions) {
         dotenv::from_filename(".env.dev").ok();
     } else {
         dotenv::dotenv().ok();
     }
 
+    //depends on core crate
+
+    env_logger::builder()
+        .filter_level(if cfg!(debug_assertions) {
+            log::LevelFilter::Debug
+        } else {
+            log::LevelFilter::Info
+        })
+        .parse_default_env()
+        .init();
+
     let schema = build_schema().await?;
 
     // todo! graphql routes and address as env variables
-    info!("Playground: http://localhost:3000/graphql");
+    // core crate server options
+    info!("Playground: http://localhost:3001/graphql/playground");
 
-    HttpServer::new(move || {
-        App::new()
-            .app_data(Data::new(schema.clone()))
-            .service(
-                web::resource("/graphql")
-                    .guard(guard::Post())
-                    .to(graphql_handler),
-            )
-            .service(
-                web::resource("/graphql/playground")
-                    .guard(guard::Get())
-                    .to(graphql_playground),
-            )
-    })
-    .bind("127.0.0.1:3000")?
-    .run()
-    .await
-    .map_err(Into::into)
+    Server::new(TcpListener::bind("127.0.0.1:3001"))
+        .run(
+            Route::new()
+                .at("/graphql", post(GraphQL::new(schema)))
+                .at("/playground", get(playground)),
+        )
+        .await
+        .map_err(Into::into)
 }
