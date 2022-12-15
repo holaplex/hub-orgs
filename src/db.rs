@@ -1,5 +1,4 @@
 pub use sea_orm::{ConnectOptions, Database, DatabaseConnection};
-pub use sea_orm_migration::prelude::*;
 
 use crate::prelude::*;
 

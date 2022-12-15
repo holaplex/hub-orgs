@@ -26,6 +26,6 @@ RUN apt-get update -y && \
   && \
   rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/target/release/hub-orgs /usr/local/bin
-ENTRYPOINT [ "/usr/local/bin/hub-orgs" ]
+COPY --from=builder /app/target/release/migration /usr/local/bin
+ENTRYPOINT [ "/usr/local/bin/migration" ]
 

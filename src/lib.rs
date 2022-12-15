@@ -35,8 +35,6 @@ pub mod dataloaders;
 pub mod db;
 #[allow(clippy::pedantic)]
 pub mod entities;
-#[allow(clippy::pedantic)]
-pub mod migrations;
 pub mod mutations;
 pub mod queries;
 pub mod prelude {
