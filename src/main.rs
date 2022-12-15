@@ -5,7 +5,6 @@ use async_graphql::{
 };
 use async_graphql_poem::GraphQL;
 use hub_orgs::{db::Connection, mutations::Mutation, prelude::*, queries::Query};
-use log::info;
 use poem::{get, handler, listener::TcpListener, post, web::Html, IntoResponse, Route, Server};
 
 pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
@@ -34,8 +33,6 @@ async fn playground() -> impl IntoResponse {
 #[tokio::main]
 pub async fn main() -> Result<()> {
     if cfg!(debug_assertions) {
-        dotenv::from_filename(".env.dev").ok();
-    } else {
         dotenv::dotenv().ok();
     }
 
@@ -49,10 +46,6 @@ pub async fn main() -> Result<()> {
         .init();
 
     let schema = build_schema().await?;
-
-    // todo! graphql routes and address as env variables
-    // core crate server options
-    info!("Playground: http://localhost:3001/graphql/playground");
 
     Server::new(TcpListener::bind("127.0.0.1:3001"))
         .run(

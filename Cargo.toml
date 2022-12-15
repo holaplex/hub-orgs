@@ -7,32 +7,12 @@ authors = [
 edition = "2021"
 description = "Holaplex Hub organization service"
 readme = "./README.md"
-repository = "https://github.com/holaplex/indexer"
+repository = "https://github.com/holaplex/hub-orgs"
 license = "AGPL-3.0-or-later"
-keywords = ["solana", "hub", "holaplex", "web3"]
+keywords = ["hub", "holaplex", "web3"]
 categories = ["cryptography::cryptocurrencies", "web-programming"]
-default-run = "migrator"
-
-[[bin]]
-name = "migrator"
-path = "src/bin/migrator.rs"
-
-[[bin]]
-name = "graphql"
-path = "src/bin/graphql.rs"
-
-[profile.release]
-opt-level = 3
-debug = false
-debug-assertions = false
-lto = "thin"
-
-[profile.docker]
-inherits = "release"
-strip = "symbols"
 
 [dependencies]
-sea-orm-migration = { version = "^0.10.0", features = ["sqlx-postgres"] }
 sea-orm = { version = "^0.10.0" , features = [ "debug-print", "runtime-async-std-native-tls", "sqlx-postgres" ] }
 async-graphql = { version = "5.0.3", features = ["chrono", "uuid", "log", "dataloader"] }
 poem = "1.3.50"
