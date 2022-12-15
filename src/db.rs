@@ -21,7 +21,7 @@ pub struct Args {
 pub struct Connection(DatabaseConnection);
 
 impl Connection {
-    pub async fn new() -> Result<Connection> {
+    pub async fn new() -> Result<Self> {
         let Args {
             max_connections,
             connection_timeout,
@@ -43,6 +43,8 @@ impl Connection {
 
         Ok(Self(db))
     }
+
+    #[must_use]
 
     pub fn get(self) -> DatabaseConnection {
         self.0

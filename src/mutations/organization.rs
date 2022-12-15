@@ -3,10 +3,10 @@ use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
 
 use crate::entities::{organizations, organizations::ActiveModel};
 #[derive(Default)]
-pub struct OrganizationMutation;
+pub struct Mutation;
 
 #[Object]
-impl OrganizationMutation {
+impl Mutation {
     pub async fn create_organization(
         &self,
         ctx: &Context<'_>,
@@ -28,7 +28,7 @@ pub struct CreateOrganizationInput {
 
 impl From<CreateOrganizationInput> for ActiveModel {
     fn from(val: CreateOrganizationInput) -> Self {
-        ActiveModel {
+        Self {
             name: Set(val.name),
             ..Default::default()
         }

@@ -1,3 +1,4 @@
+#[allow(clippy::all)]
 pub use sea_orm_migration::prelude::*;
 
 mod m20221212_170906_organizations;

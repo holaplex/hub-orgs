@@ -3,10 +3,10 @@ use sea_orm::{DatabaseConnection, EntityTrait};
 
 use crate::entities::organizations;
 #[derive(Default)]
-pub struct OrganizationQuery;
+pub struct Query;
 
 #[Object]
-impl OrganizationQuery {
+impl Query {
     async fn organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 
