@@ -11,6 +11,25 @@ repository = "https://github.com/holaplex/indexer"
 license = "AGPL-3.0-or-later"
 keywords = ["solana", "hub", "holaplex", "web3"]
 categories = ["cryptography::cryptocurrencies", "web-programming"]
+default-run = "migrator"
+
+[[bin]]
+name = "migrator"
+path = "src/bin/migrator.rs"
+
+[[bin]]
+name = "graphql"
+path = "src/bin/graphql.rs"
+
+[profile.release]
+opt-level = 3
+debug = false
+debug-assertions = false
+lto = "thin"
+
+[profile.docker]
+inherits = "release"
+strip = "symbols"
 
 [dependencies]
 sea-orm-migration = { version = "^0.10.0", features = ["sqlx-postgres"] }

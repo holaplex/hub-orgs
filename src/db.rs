@@ -1,7 +1,7 @@
 pub use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 pub use sea_orm_migration::prelude::*;
 
-use crate::{migration, prelude::*};
+use crate::prelude::*;
 
 /// Arguments for establishing a database connection
 #[derive(Debug, Parser)]
@@ -40,9 +40,6 @@ impl Connection {
         let db = Database::connect(options)
             .await
             .context("failed to get database connection")?;
-
-        debug!("running migrations..");
-        migration::Migrator::up(&db, None).await?;
 
         Ok(Self(db))
     }

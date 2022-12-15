@@ -1,5 +1,7 @@
-FROM rust:1.58.1-slim-bullseye AS build
+FROM rust:1.58.1-slim-bullseye AS chef
+RUN cargo install cargo-chef 
 WORKDIR /build
+
 
 RUN apt-get update -y && \
   apt-get install -y \
@@ -15,14 +17,21 @@ COPY rust-toolchain.toml ./
 # Force rustup to install toolchain
 RUN rustc --version
 
-COPY ./src ./src
-COPY ./migration ./migration
-COPY Cargo.toml Cargo.lock ./
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare  --recipe-path recipe.json
 
-RUN cargo build --release
+FROM chef AS builder
+COPY --from=planner /build/recipe.json recipe.json
+# Build dependencies - this is the caching Docker layer!
+RUN cargo chef cook --release --recipe-path recipe.json
+# Build application
+COPY . .
+RUN cargo build --profile docker --bin migrator \ 
+--bin graphql
 
 
-FROM debian:bullseye-slim
+FROM debian:bullseye-slim as base
 WORKDIR /hug-orgs
 RUN apt-get update -y && \
   apt-get install -y \
@@ -32,5 +41,10 @@ RUN apt-get update -y && \
   && \
   rm -rf /var/lib/apt/lists/*
 
-COPY .env ./
-COPY --from=build /build/target/release/hub-orgs /hub-orgs
+RUN mkdir -p bin
+
+FROM base as migrator
+COPY --from=builder /build/target/release/migrator bin/
+
+FROM base as graphql
+COPY --from=builder /build/target/release/graphql bin/

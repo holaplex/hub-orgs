@@ -1,11 +1,9 @@
+pub mod dataloaders;
 pub mod db;
 pub mod entities;
+pub mod migrations;
 pub mod mutations;
 pub mod queries;
-
-#[path = "../migration/mod.rs"]
-mod migration;
-
 pub mod prelude {
 
     pub use std::time::Duration;

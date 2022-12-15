@@ -20,7 +20,7 @@ pub async fn build_schema() -> Result<AppSchema> {
 
     let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
         .extension(extensions::Logger)
-        .data(db)
+        .data(db.get())
         .finish();
 
     Ok(schema)
@@ -33,14 +33,11 @@ async fn playground() -> impl IntoResponse {
 
 #[tokio::main]
 pub async fn main() -> Result<()> {
-    // todo! depends on core crate
     if cfg!(debug_assertions) {
         dotenv::from_filename(".env.dev").ok();
     } else {
         dotenv::dotenv().ok();
     }
-
-    //depends on core crate
 
     env_logger::builder()
         .filter_level(if cfg!(debug_assertions) {
