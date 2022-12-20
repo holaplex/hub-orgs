@@ -23,7 +23,7 @@ pub enum Relation {}
 impl ActiveModelBehavior for ActiveModel {}
 
 impl Entity {
-    pub fn find_by_id(id: i32) -> Select<Self> {
+    pub fn find_by_id(id: Uuid) -> Select<Self> {
         Self::find().filter(Column::Id.eq(id))
     }
 

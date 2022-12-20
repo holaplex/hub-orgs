@@ -1,4 +1,5 @@
 //!
+
 #![deny(
     clippy::pedantic,
     clippy::match_wildcard_for_single_variants,
@@ -6,6 +7,11 @@
     clippy::cargo
 )]
 #![warn(
+    clippy::perf,
+    clippy::complexity,
+    clippy::style,
+    clippy::suspicious,
+    clippy::correctness,
     clippy::module_name_repetitions,
     clippy::similar_names,
     clippy::if_not_else,
@@ -41,8 +47,35 @@ pub mod prelude {
 
     pub use std::time::Duration;
 
-    pub use anyhow::{Context, Result};
+    pub use anyhow::{anyhow, bail, Context, Result};
     pub use chrono::{DateTime, Utc};
     pub use clap::Parser;
     pub use log::debug;
+}
+
+use anyhow::anyhow;
+use poem::{async_trait, FromRequest, Request, RequestBody, Result};
+
+#[derive(Debug)]
+pub struct UserID(pub String);
+
+impl From<String> for UserID {
+    fn from(value: String) -> Self {
+        Self(value)
+    }
+}
+
+#[async_trait]
+impl<'a> FromRequest<'a> for UserID {
+    async fn from_request(req: &'a Request, _body: &mut RequestBody) -> Result<Self> {
+        let id = req
+            .headers()
+            .get("X-USER-ID")
+            .and_then(|value| value.to_str().ok())
+            .map(|v| Self(v.to_string()))
+            .ok_or_else(|| anyhow!("X-USER-ID not provided in the request"))
+            .map_err(Into::into);
+
+        id
+    }
 }

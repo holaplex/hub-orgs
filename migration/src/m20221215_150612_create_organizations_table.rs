@@ -44,7 +44,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(Iden)]
-enum Organizations {
+pub enum Organizations {
     Table,
     Id,
     Name,

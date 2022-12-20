@@ -1,27 +1,34 @@
 use async_graphql::{self, Context, Object, Result};
-use sea_orm::{DatabaseConnection, EntityTrait};
+use sea_orm::prelude::*;
 
 use crate::entities::organizations;
 #[derive(Default)]
 pub struct Query;
 
-#[Object]
+#[Object(name = "OrganizationQuery")]
 impl Query {
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
     async fn organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
-        let db = ctx.data::<DatabaseConnection>()?;
+        let db = ctx.data_unchecked::<DatabaseConnection>();
 
         organizations::Entity::find()
             .all(db)
             .await
             .map_err(Into::into)
     }
-
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
     async fn organization(
         &self,
         ctx: &Context<'_>,
-        id: i32,
+        id: uuid::Uuid,
     ) -> Result<Option<organizations::Model>> {
-        let db = ctx.data::<DatabaseConnection>()?;
+        let db = ctx.data_unchecked::<DatabaseConnection>();
 
         organizations::Entity::find_by_id(id)
             .one(db)

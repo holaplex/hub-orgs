@@ -1,23 +1,41 @@
 use async_graphql::{self, Context, InputObject, Object, Result};
-use sea_orm::{ActiveModelTrait, DatabaseConnection, Set};
+use sea_orm::{prelude::*, Set};
+use uuid::Uuid;
 
-use crate::entities::{organizations, organizations::ActiveModel};
+use crate::{
+    entities::{organizations, organizations::ActiveModel, owners},
+    UserID,
+};
+
 #[derive(Default)]
 pub struct Mutation;
 
-#[Object]
+#[Object(name = "OrganizationMutation")]
 impl Mutation {
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
     pub async fn create_organization(
         &self,
         ctx: &Context<'_>,
         input: CreateOrganizationInput,
     ) -> Result<organizations::Model> {
-        let db = ctx.data::<DatabaseConnection>()?;
+        let UserID(id) = ctx.data::<UserID>()?;
+        let db = ctx.data_unchecked::<DatabaseConnection>();
 
-        ActiveModel::from(input)
-            .insert(db)
-            .await
-            .map_err(Into::into)
+        let org = ActiveModel::from(input).insert(db).await?;
+        let user_id = Uuid::parse_str(id)?;
+
+        let owner = owners::ActiveModel {
+            user_id: Set(user_id),
+            organization_id: Set(org.id),
+            ..Default::default()
+        };
+
+        owner.insert(db).await?;
+
+        Ok(org)
     }
 }
 

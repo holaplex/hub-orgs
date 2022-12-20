@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 pub use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
 use crate::prelude::*;
@@ -17,9 +19,13 @@ pub struct Args {
     database_url: String,
 }
 
-pub struct Connection(DatabaseConnection);
+pub struct Connection(Arc<DatabaseConnection>);
 
 impl Connection {
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
     pub async fn new() -> Result<Self> {
         let Args {
             max_connections,
@@ -40,12 +46,12 @@ impl Connection {
             .await
             .context("failed to get database connection")?;
 
-        Ok(Self(db))
+        Ok(Self(Arc::new(db)))
     }
 
     #[must_use]
 
-    pub fn get(self) -> DatabaseConnection {
+    pub fn get(self) -> Arc<DatabaseConnection> {
         self.0
     }
 }
