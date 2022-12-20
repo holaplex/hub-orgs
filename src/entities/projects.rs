@@ -22,7 +22,7 @@ pub struct Model {
 #[ComplexObject]
 impl Model {
     async fn organization(&self, ctx: &Context<'_>) -> Result<Option<Organization>> {
-        let loader = ctx.data_unchecked::<DataLoader<OrganizationLoader>>();
+        let loader = ctx.data::<DataLoader<OrganizationLoader>>()?;
         loader.load_one(self.organization_id).await
     }
 }

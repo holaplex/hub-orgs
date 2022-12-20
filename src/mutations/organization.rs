@@ -22,7 +22,7 @@ impl Mutation {
         input: CreateOrganizationInput,
     ) -> Result<organizations::Model> {
         let UserID(id) = ctx.data::<UserID>()?;
-        let db = ctx.data_unchecked::<DatabaseConnection>();
+        let db = ctx.data::<DatabaseConnection>()?;
 
         let org = ActiveModel::from(input).insert(db).await?;
         let user_id = Uuid::parse_str(id)?;

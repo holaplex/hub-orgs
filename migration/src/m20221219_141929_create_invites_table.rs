@@ -1,5 +1,6 @@
 use sea_orm_migration::prelude::*;
-use sea_query::{extension::postgres::Type};
+use sea_query::extension::postgres::Type;
+
 use crate::m20221215_150612_create_organizations_table::Organizations;
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -7,12 +8,14 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-
-
-        manager.create_type(Type::create()
-        .as_enum(Status::Type)
-        .values([Status::Sent, Status::Accepted, Status::Revoked]).to_owned())
-        .await?;
+        manager
+            .create_type(
+                Type::create()
+                    .as_enum(Status::Type)
+                    .values([Status::Sent, Status::Accepted, Status::Revoked])
+                    .to_owned(),
+            )
+            .await?;
 
         manager
             .create_table(
@@ -27,7 +30,11 @@ impl MigrationTrait for Migration {
                             .extra(" default gen_random_uuid()".to_string()),
                     )
                     .col(ColumnDef::new(Invites::Email).string().not_null())
-                    .col(ColumnDef::new(Invites::Status).custom(Status::Type).not_null())
+                    .col(
+                        ColumnDef::new(Invites::Status)
+                            .custom(Status::Type)
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(Invites::OrganizationId).uuid().not_null())
                     .col(ColumnDef::new(Invites::CreatedBy).uuid().not_null())
                     .col(
@@ -49,7 +56,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-            manager
+        manager
             .create_index(
                 IndexCreateStatement::new()
                     .name("invities_email_idx")
@@ -91,7 +98,6 @@ enum Invites {
     UpdatedAt,
 }
 
-
 enum Status {
     Type,
     Sent,
@@ -101,16 +107,12 @@ enum Status {
 
 impl Iden for Status {
     fn unquoted(&self, s: &mut dyn std::fmt::Write) {
-        write!(
-            s,
-            "{}",
-            match self {
-                Self::Type => "invite_status",
-                Self::Sent => "sent",
-                Self::Accepted => "accepted",
-                Self::Revoked => "revoked",
-            }
-        )
+        write!(s, "{}", match self {
+            Self::Type => "invite_status",
+            Self::Sent => "sent",
+            Self::Accepted => "accepted",
+            Self::Revoked => "revoked",
+        })
         .unwrap();
     }
 }

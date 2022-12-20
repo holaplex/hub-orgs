@@ -1,4 +1,5 @@
 use sea_orm_migration::prelude::*;
+
 use crate::m20221215_150612_create_organizations_table::Organizations;
 #[derive(DeriveMigrationName)]
 pub struct Migration;
@@ -6,9 +7,6 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-
-
-      
         manager
             .create_table(
                 Table::create()
@@ -42,8 +40,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-
-            manager
+        manager
             .create_index(
                 IndexCreateStatement::new()
                     .name("members_user_id_idx")
@@ -82,4 +79,3 @@ enum Members {
     CreatedAt,
     RevokedAt,
 }
-

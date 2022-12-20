@@ -18,7 +18,7 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateProjectInput,
     ) -> Result<projects::Model> {
-        let db = ctx.data_unchecked::<DatabaseConnection>();
+        let db = ctx.data::<DatabaseConnection>()?;
 
         ActiveModel::from(input)
             .insert(db)

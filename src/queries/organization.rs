@@ -12,7 +12,7 @@ impl Query {
     /// # Errors
     /// This function fails if ...
     async fn organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
-        let db = ctx.data_unchecked::<DatabaseConnection>();
+        let db = ctx.data::<DatabaseConnection>()?;
 
         organizations::Entity::find()
             .all(db)
@@ -28,7 +28,7 @@ impl Query {
         ctx: &Context<'_>,
         id: uuid::Uuid,
     ) -> Result<Option<organizations::Model>> {
-        let db = ctx.data_unchecked::<DatabaseConnection>();
+        let db = ctx.data::<DatabaseConnection>()?;
 
         organizations::Entity::find_by_id(id)
             .one(db)
