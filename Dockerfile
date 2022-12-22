@@ -2,8 +2,7 @@ FROM lukemathwalker/cargo-chef:0.1.50-rust-buster AS chef
 WORKDIR /app
 
 FROM chef AS planner
-COPY Cargo.toml Cargo.toml
-COPY Cargo.lock Cargo.lock
+COPY Cargo.* ./
 COPY api api
 COPY migration migration
 RUN cargo chef prepare --recipe-path recipe.json
@@ -14,7 +13,8 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
 COPY Cargo.* ./
-COPY api migration ./
+COPY api api
+COPY migration migration
 RUN cargo build --release
 
 
