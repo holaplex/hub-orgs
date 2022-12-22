@@ -1,22 +1,33 @@
 use std::str::FromStr;
 
+use poem::{middleware::AddDataEndpoint, test::TestClient};
 use sea_orm::{DatabaseBackend, MockDatabase};
 
 use super::*;
 use crate::entities::{organizations, projects};
 
-#[tokio::test]
-pub async fn test_user_id_header() -> Result<()> {
+async fn build_client()
+-> Result<TestClient<AddDataEndpoint<Route, Schema<Query, Mutation, EmptySubscription>>>> {
     let db = Arc::new(MockDatabase::new(DatabaseBackend::Postgres).into_connection());
 
-    let schema = build_schema(Context {
-        db: db.clone(),
-        organization_loader: DataLoader::new(OrganizationLoader::new(db), tokio::spawn),
-    })
-    .await?;
+    let schema = build_schema(context(db)).await.unwrap();
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);
+
+    Ok(cli)
+}
+
+fn context(db: Arc<DatabaseConnection>) -> Context {
+    Context {
+        db: db.clone(),
+        organization_loader: DataLoader::new(OrganizationLoader::new(db), tokio::spawn),
+    }
+}
+
+#[tokio::test]
+pub async fn test_user_id_header() -> Result<()> {
+    let cli = build_client().await?;
 
     let resp = cli
         .post("/")
@@ -46,11 +57,7 @@ pub async fn test_organization_query() -> Result<()> {
             .into_connection(),
     );
 
-    let schema = build_schema(Context {
-        db: db.clone(),
-        organization_loader: DataLoader::new(OrganizationLoader::new(db), tokio::spawn),
-    })
-    .await?;
+    let schema = build_schema(context(db)).await?;
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);
@@ -80,16 +87,7 @@ pub async fn test_organization_query() -> Result<()> {
 
 #[tokio::test]
 pub async fn test_organization_mutation() -> Result<()> {
-    let db = Arc::new(MockDatabase::new(DatabaseBackend::Postgres).into_connection());
-
-    let schema = build_schema(Context {
-        db: db.clone(),
-        organization_loader: DataLoader::new(OrganizationLoader::new(db), tokio::spawn),
-    })
-    .await?;
-
-    let app = Route::new().at("/", graphql_handler).data(schema);
-    let cli = poem::test::TestClient::new(app);
+    let cli = build_client().await?;
 
     let mutation = cli
         .post("/")
@@ -121,11 +119,7 @@ pub async fn test_project_query() -> Result<()> {
             .into_connection(),
     );
 
-    let schema = build_schema(Context {
-        db: db.clone(),
-        organization_loader: DataLoader::new(OrganizationLoader::new(db), tokio::spawn),
-    })
-    .await?;
+    let schema = build_schema(context(db)).await?;
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);
