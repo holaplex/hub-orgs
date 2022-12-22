@@ -11,7 +11,7 @@ pub struct Args {
     max_connections: u32,
     #[arg(long, env, default_value = "60")]
     connection_timeout: u64,
-    #[arg(long, env, default_value = "60")]
+    #[arg(long, env, default_value = "10")]
     acquire_timeout: u64,
     #[arg(long, env, default_value = "60")]
     idle_timeout: u64,

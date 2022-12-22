@@ -33,6 +33,17 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Organizations::DeactivatedAt).timestamp())
                     .to_owned(),
             )
+            .await?;
+
+        manager
+            .create_index(
+                IndexCreateStatement::new()
+                    .name("organization_created_atidx")
+                    .table(Organizations::Table)
+                    .col(Organizations::CreatedAt)
+                    .index_type(IndexType::BTree)
+                    .to_owned(),
+            )
             .await
     }
 

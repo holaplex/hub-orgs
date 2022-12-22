@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_graphql::{self, Context, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
 use uuid::Uuid;
@@ -22,10 +24,11 @@ impl Mutation {
         input: CreateOrganizationInput,
     ) -> Result<organizations::Model> {
         let UserID(id) = ctx.data::<UserID>()?;
-        let db = ctx.data::<DatabaseConnection>()?;
+        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+
+        let user_id = Uuid::parse_str(id)?;
 
         let org = ActiveModel::from(input).insert(db).await?;
-        let user_id = Uuid::parse_str(id)?;
 
         let owner = owners::ActiveModel {
             user_id: Set(user_id),

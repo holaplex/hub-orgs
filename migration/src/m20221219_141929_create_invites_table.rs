@@ -59,6 +59,17 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 IndexCreateStatement::new()
+                    .name("invites_created_at_idx")
+                    .table(Invites::Table)
+                    .col(Invites::CreatedAt)
+                    .index_type(IndexType::BTree)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                IndexCreateStatement::new()
                     .name("invities_email_idx")
                     .table(Invites::Table)
                     .col(Invites::Email)

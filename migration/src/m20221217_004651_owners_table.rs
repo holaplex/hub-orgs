@@ -53,6 +53,17 @@ impl MigrationTrait for Migration {
         manager
             .create_index(
                 IndexCreateStatement::new()
+                    .name("owners_created_at_idx")
+                    .table(Owners::Table)
+                    .col(Owners::CreatedAt)
+                    .index_type(IndexType::BTree)
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                IndexCreateStatement::new()
                     .name("owners_user_Id_idx")
                     .table(Owners::Table)
                     .col(Owners::UserId)

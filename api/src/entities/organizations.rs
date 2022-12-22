@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 #[sea_orm(table_name = "organizations")]
 #[graphql(concrete(name = "Organization", params()))]
 pub struct Model {
-    #[sea_orm(primary_key, auto_increment = true, column_type = "Uuid")]
+    #[sea_orm(primary_key, column_type = "Uuid")]
     pub id: uuid::Uuid,
     #[sea_orm(column_type = "Text")]
     pub name: String,

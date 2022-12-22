@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use async_graphql::{self, Context, Object, Result, Union};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 use uuid::Uuid;
 
 use crate::{
-    entities::{members, organizations, owners},
+    entities::{members, owners},
     UserID,
 };
 
@@ -31,7 +33,7 @@ impl Query {
         let UserID(id) = ctx.data::<UserID>()?;
         let user_id = Uuid::parse_str(id)?;
 
-        let db = ctx.data::<DatabaseConnection>()?;
+        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
 
         // No union all in sea query?
 
@@ -56,22 +58,5 @@ impl Query {
             .map(Into::into)
             .chain(org_members.into_iter().map(Into::into))
             .collect())
-    }
-
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
-    async fn organization(
-        &self,
-        ctx: &Context<'_>,
-        id: uuid::Uuid,
-    ) -> Result<Option<organizations::Model>> {
-        let db = ctx.data::<DatabaseConnection>()?;
-
-        organizations::Entity::find_by_id(id)
-            .one(db)
-            .await
-            .map_err(Into::into)
     }
 }

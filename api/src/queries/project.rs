@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use async_graphql::{self, Context, Object, Result};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 
@@ -18,7 +20,8 @@ impl Query {
         #[graphql(default = 25)] limit: u64,
         #[graphql(default = 0)] offset: u64,
     ) -> Result<Vec<projects::Model>> {
-        let db = ctx.data::<DatabaseConnection>()?;
+        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+
         projects::Entity::find()
             .order_by_desc(projects::Column::CreatedAt)
             .limit(limit)
