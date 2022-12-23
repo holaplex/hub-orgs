@@ -1,0 +1,49 @@
+on: [push, pull_request]
+
+name: Cargo
+
+jobs:
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2022-12-11
+      - run: cargo test
+
+  clippy:
+    name: clippy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2022-12-11
+          components: clippy
+      - run: cargo clippy --all -- -D warnings
+  
+  fmt:
+    name: fmt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          toolchain: nightly-2022-12-11
+          components: rustfmt
+      - run: cargo fmt --all-features
+
+  build:
+      name: build
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v3
+        - uses: dtolnay/rust-toolchain@nightly
+          with:
+          toolchain: nightly-2022-12-11
+        - uses: actions-rs/cargo@v1
+          with:
+            command: build
+            args: --release --all-features
