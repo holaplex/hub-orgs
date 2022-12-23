@@ -36,14 +36,10 @@ jobs:
               ~/.cargo/git/db/
               target/
             key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'rust-toolchain.toml') }}
-
-        - name: test
-          env:
-            DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
-          run: |
-           cargo install sea-orm-cli
         
         - name: cargo test
           uses: actions-rs/cargo@v1
+          env:
+            DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/ci
           with:
             command: test
