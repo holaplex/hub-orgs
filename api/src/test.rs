@@ -10,7 +10,7 @@ async fn build_client()
 -> Result<TestClient<AddDataEndpoint<Route, Schema<Query, Mutation, EmptySubscription>>>> {
     let db = Arc::new(MockDatabase::new(DatabaseBackend::Postgres).into_connection());
 
-    let schema = build_schema(context(db)).await.unwrap();
+    let schema = build_schema(db).await.unwrap();
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);
@@ -18,11 +18,14 @@ async fn build_client()
     Ok(cli)
 }
 
-fn context(db: Arc<DatabaseConnection>) -> Context {
-    Context {
-        db: db.clone(),
-        organization_loader: DataLoader::new(OrganizationLoader::new(db), tokio::spawn),
-    }
+pub async fn build_schema(db: Arc<DatabaseConnection>) -> Result<AppSchema> {
+    let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
+        .extension(ApolloTracing)
+        .extension(Logger)
+        .data(db)
+        .finish();
+
+    Ok(schema)
 }
 
 #[tokio::test]
@@ -57,7 +60,7 @@ pub async fn test_organization_query() -> Result<()> {
             .into_connection(),
     );
 
-    let schema = build_schema(context(db)).await?;
+    let schema = build_schema(db).await?;
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);
@@ -119,7 +122,7 @@ pub async fn test_project_query() -> Result<()> {
             .into_connection(),
     );
 
-    let schema = build_schema(context(db)).await?;
+    let schema = build_schema(db).await?;
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);

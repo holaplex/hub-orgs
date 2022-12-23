@@ -41,8 +41,12 @@ impl User {
             .await?;
 
         let org_members = members::Entity::find()
-            .filter(members::Column::UserId.eq(user_id))
-            .order_by_desc(members::Column::CreatedAt)
+            .filter(
+                members::Column::UserId
+                    .eq(user_id)
+                    .and(members::Column::RevokedAt.is_null()),
+            )
+            .order_by_desc(owners::Column::CreatedAt)
             .limit(limit)
             .offset(offset)
             .all(db)

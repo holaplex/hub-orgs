@@ -64,7 +64,7 @@ use async_graphql::{
     EmptySubscription, Schema,
 };
 use async_graphql_poem::{GraphQLRequest, GraphQLResponse};
-use dataloaders::OrganizationLoader;
+use dataloaders::{MembersLoader, OrganizationLoader, OwnerLoader};
 use db::Connection;
 use mutations::Mutation;
 use poem::{
@@ -129,6 +129,8 @@ async fn graphql_handler(
 pub struct Context {
     db: Arc<DatabaseConnection>,
     organization_loader: DataLoader<OrganizationLoader>,
+    members_loader: DataLoader<MembersLoader>,
+    owner_loader: DataLoader<OwnerLoader>,
 }
 
 impl Context {
@@ -140,10 +142,14 @@ impl Context {
 
         let organization_loader =
             DataLoader::new(OrganizationLoader::new(db.clone()), tokio::spawn);
+        let members_loader = DataLoader::new(MembersLoader::new(db.clone()), tokio::spawn);
+        let owner_loader = DataLoader::new(OwnerLoader::new(db.clone()), tokio::spawn);
 
         Ok(Self {
             db,
             organization_loader,
+            members_loader,
+            owner_loader,
         })
     }
 }
@@ -154,9 +160,11 @@ pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
     let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
         .extension(ApolloTracing)
         .extension(Logger)
+        .enable_federation()
         .data(ctx.db)
         .data(ctx.organization_loader)
-        .enable_federation()
+        .data(ctx.members_loader)
+        .data(ctx.owner_loader)
         .finish();
 
     Ok(schema)
