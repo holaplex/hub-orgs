@@ -12,7 +12,7 @@ async fn test_migrations() -> Result<(), Box<dyn std::error::Error>> {
     let opts = sea_orm::ConnectOptions::new(url);
     let db = sea_orm::Database::connect(opts).await?;
 
-    let applied = migration::Migrator::up(&db, None).await;
+    let applied = migration::Migrator::fresh(&db).await;
 
     assert!(applied.is_ok());
 
