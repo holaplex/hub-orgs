@@ -25,13 +25,25 @@ impl DataLoader<Uuid> for MembersLoader {
     type Error = FieldError;
     type Value = Vec<MModel>;
 
-    async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
+    async fn load(
+        &self,
+        organization_ids: &[Uuid],
+    ) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
         let members = MEntity::find()
-            .filter(MColumn::Id.is_in(keys.iter().map(ToOwned::to_owned)))
+            .filter(MColumn::OrganizationId.is_in(organization_ids.iter().map(ToOwned::to_owned)))
             .all(&*self.db)
             .await?;
 
-        Ok(members.iter().map(|m| (m.id, vec![m.clone()])).collect())
+        let mut hashmap = HashMap::new();
+
+        for m in members {
+            hashmap
+                .entry(m.organization_id)
+                .or_insert(Vec::new())
+                .push(m);
+        }
+
+        Ok(hashmap)
     }
 }
 
@@ -57,6 +69,6 @@ impl DataLoader<Uuid> for OwnerLoader {
             .all(&*self.db)
             .await?;
 
-        Ok(owners.iter().map(|m| (m.id, m.clone())).collect())
+        Ok(owners.iter().map(|o| (o.id, o.clone())).collect())
     }
 }
