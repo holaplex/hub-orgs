@@ -34,7 +34,8 @@ impl Query {
     ///
     /// # Errors
     /// This function fails if ...
-    async fn project(&self, ctx: &Context<'_>, id: uuid::Uuid) -> Result<Option<projects::Model>> {
+    #[graphql(entity)]
+    async fn project(&self, ctx: &Context<'_>, #[graphql(key)] id: uuid::Uuid) -> Result<Option<projects::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 
         projects::Entity::find_by_id(id)
