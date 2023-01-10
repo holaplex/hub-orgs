@@ -47,7 +47,7 @@ impl Query {
 
         let org_members = members::Entity::find()
             .filter(members::Column::UserId.eq(user_id))
-            .order_by_desc(owners::Column::CreatedAt)
+            .order_by_desc(members::Column::CreatedAt)
             .limit(limit)
             .offset(offset)
             .all(db)
