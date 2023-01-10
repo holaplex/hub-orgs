@@ -4,7 +4,7 @@ use async_graphql::{Context, Object, Result, Union};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 use uuid::Uuid;
 
-use crate::{entities::{members, owners}};
+use crate::entities::{members, owners};
 
 #[derive(Union)]
 enum Affiliation {
@@ -32,27 +32,21 @@ impl User {
         let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
         let user_id = self.id;
 
-        log::debug!("The user id: {user_id}");
-
         let org_owners = owners::Entity::find()
             .filter(owners::Column::UserId.eq(user_id))
             .order_by_desc(owners::Column::CreatedAt)
             .limit(limit)
             .offset(offset)
             .all(db)
-            .await?;    
-
-            log::debug!("The owners: {:?}", org_owners);
+            .await?;
 
         let org_members = members::Entity::find()
             .filter(members::Column::UserId.eq(user_id))
-            .order_by_desc(owners::Column::CreatedAt)
+            .order_by_desc(members::Column::CreatedAt)
             .limit(limit)
             .offset(offset)
             .all(db)
             .await?;
-
-            log::debug!("The members: {:?}", org_members);
 
         Ok(org_owners
             .into_iter()

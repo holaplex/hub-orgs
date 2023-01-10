@@ -54,7 +54,7 @@ mod prelude {
     pub use log::debug;
 }
 
-use std::{sync::Arc, str::FromStr};
+use std::{str::FromStr, sync::Arc};
 
 use anyhow::{Context as AnyhowContext, Result};
 use async_graphql::{
@@ -81,13 +81,13 @@ use sea_orm::DatabaseConnection;
 #[derive(Debug, Parser)]
 pub struct Args {
     #[clap(short, long, env, default_value = "3002")]
-    port: u16
+    port: u16,
 }
 
 #[derive(Debug)]
 pub struct UserID(Option<uuid::Uuid>);
 
-impl TryFrom<& str> for UserID {
+impl TryFrom<&str> for UserID {
     type Error = anyhow::Error;
 
     fn try_from(value: &str) -> Result<Self> {
@@ -104,8 +104,7 @@ impl<'a> FromRequest<'a> for UserID {
             .headers()
             .get("X-USER-ID")
             .and_then(|value| value.to_str().ok())
-            .map(|value| UserID::try_from(value))
-            .unwrap_or(Ok(UserID(None)))?;
+            .map_or(Ok(Self(None)), Self::try_from)?;
 
         Ok(id)
     }

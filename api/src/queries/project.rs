@@ -34,13 +34,25 @@ impl Query {
     ///
     /// # Errors
     /// This function fails if ...
-    #[graphql(entity)]
-    async fn project(&self, ctx: &Context<'_>, #[graphql(key)] id: uuid::Uuid) -> Result<Option<projects::Model>> {
+    async fn project(&self, ctx: &Context<'_>, id: uuid::Uuid) -> Result<Option<projects::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 
         projects::Entity::find_by_id(id)
             .one(db)
             .await
             .map_err(Into::into)
+    }
+
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
+    #[graphql(entity)]
+    async fn find_project_by_id(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(key)] id: uuid::Uuid,
+    ) -> Result<Option<projects::Model>> {
+        self.project(ctx, id).await
     }
 }
