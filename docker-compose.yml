@@ -39,6 +39,71 @@ services:
     - 9092:9092
     - 28082:28082
     - 29092:29092
+
+
+  # ory hydra
+  hydra:
+    image: oryd/hydra:v2.0.3
+    ports:
+      - "4444:4444" # Public port
+      - "4445:4445" # Admin port
+      - "5555:5555" # Port for hydra token user
+    command: serve -c /etc/config/hydra/hydra.yml all --dev
+    env_file:
+      - .env    
+    volumes:
+      - type: volume
+        source: hydra-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      - type: bind
+        source: ./hydra.yml
+        target: /etc/config/hydra/hydra.yml
+    environment:
+      - DSN=postgres://holaplex:holaplex@postgresd:5432/hydra?sslmode=disable&max_conns=100&max_idle_conns=10
+    restart: unless-stopped
+    depends_on:
+      - hydra-migrate
+    networks:
+      - hydra
+  hydra-migrate:
+    image: oryd/hydra:v2.0.3
+    environment:
+      - DSN=postgres://holaplex:holaplex@postgresd:5432/hydra?sslmode=disable&max_conns=100&max_idle_conns=10
+    command: migrate -c /etc/config/hydra/hydra.yml sql -e --yes
+    env_file:
+      - .env 
+    volumes:
+      - type: volume
+        source: hydra-sqlite
+        target: /var/lib/sqlite
+        read_only: false
+      - type: bind
+        source: ./hydra.yml
+        target: /etc/config/hydra/hydra.yml
+    restart: on-failure
+    networks:
+      - hydra
+  consent:
+    environment:
+      - HYDRA_ADMIN_URL=http://hydra:4445
+    image: oryd/hydra-login-consent-node:v2.0.3
+    ports:
+      - "3010:3000"
+    restart: unless-stopped
+  postgresd:
+    image: postgres:11.8
+    ports:
+      - "5132:5432"
+    environment:
+      - POSTGRES_USER=holaplex
+      - POSTGRES_PASSWORD=holaplex
+      - POSTGRES_DB=hydra
+    networks:
+      - hydra
+networks:
+  hydra:
 volumes:
   hub_orgs_db:
     driver: local
+  hydra-sqlite:
