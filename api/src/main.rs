@@ -54,9 +54,9 @@ mod prelude {
     pub use log::debug;
 }
 
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
-use anyhow::{anyhow, Context as AnyhowContext, Result};
+use anyhow::{Context as AnyhowContext, Result};
 use async_graphql::{
     dataloader::DataLoader,
     extensions::{ApolloTracing, Logger},
@@ -78,12 +78,22 @@ use prelude::*;
 use queries::Query;
 use sea_orm::DatabaseConnection;
 
-#[derive(Debug)]
-pub struct UserID(pub String);
+#[derive(Debug, Parser)]
+pub struct Args {
+    #[clap(short, long, env, default_value = "3002")]
+    port: u16,
+}
 
-impl From<String> for UserID {
-    fn from(value: String) -> Self {
-        Self(value)
+#[derive(Debug)]
+pub struct UserID(Option<uuid::Uuid>);
+
+impl TryFrom<&str> for UserID {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self> {
+        let id = uuid::Uuid::from_str(value)?;
+
+        Ok(Self(Some(id)))
     }
 }
 
@@ -94,11 +104,9 @@ impl<'a> FromRequest<'a> for UserID {
             .headers()
             .get("X-USER-ID")
             .and_then(|value| value.to_str().ok())
-            .map(|v| Self(v.to_string()))
-            .ok_or_else(|| anyhow!("X-USER-ID not provided in the request"))
-            .map_err(Into::into);
+            .map_or(Ok(Self(None)), Self::try_from)?;
 
-        id
+        Ok(id)
     }
 }
 
@@ -115,8 +123,6 @@ async fn graphql_handler(
     user_id: UserID,
     req: GraphQLRequest,
 ) -> GraphQLResponse {
-    debug!("{:?}", user_id);
-
     schema.execute(req.0.data(user_id)).await.into()
 }
 
@@ -150,6 +156,7 @@ pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
         .extension(Logger)
         .data(ctx.db)
         .data(ctx.organization_loader)
+        .enable_federation()
         .finish();
 
     Ok(schema)
@@ -160,6 +167,8 @@ pub async fn main() -> Result<()> {
     if cfg!(debug_assertions) {
         dotenv::dotenv().ok();
     }
+
+    let Args { port } = Args::parse();
 
     env_logger::builder()
         .filter_level(if cfg!(debug_assertions) {
@@ -177,7 +186,7 @@ pub async fn main() -> Result<()> {
         .await
         .context("failed to build schema")?;
 
-    Server::new(TcpListener::bind("127.0.0.1:3001"))
+    Server::new(TcpListener::bind(format!("127.0.0.1:{port}")))
         .run(
             Route::new()
                 .at("/graphql", post(graphql_handler))

@@ -42,4 +42,17 @@ impl Query {
             .await
             .map_err(Into::into)
     }
+
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
+    #[graphql(entity)]
+    async fn find_project_by_id(
+        &self,
+        ctx: &Context<'_>,
+        #[graphql(key)] id: uuid::Uuid,
+    ) -> Result<Option<projects::Model>> {
+        self.project(ctx, id).await
+    }
 }

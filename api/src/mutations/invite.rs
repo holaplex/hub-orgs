@@ -25,8 +25,8 @@ impl Mutation {
         input: MemberInput,
     ) -> Result<invites::Model> {
         let UserID(id) = ctx.data::<UserID>()?;
+        let user_id = id.ok_or_else(|| "no user id")?;
         let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
-        let user_id = Uuid::parse_str(id)?;
 
         let active_model = invites::ActiveModel {
             organization_id: Set(input.organization),
