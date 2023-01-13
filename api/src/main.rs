@@ -43,6 +43,7 @@ mod db;
 #[allow(clippy::pedantic)]
 mod entities;
 mod mutations;
+mod ory_client;
 mod queries;
 
 mod prelude {
@@ -64,7 +65,9 @@ use async_graphql::{
     EmptySubscription, Schema,
 };
 use async_graphql_poem::{GraphQLRequest, GraphQLResponse};
-use dataloaders::{MembersLoader, OrganizationLoader, OwnerLoader};
+use dataloaders::{
+    MembersLoader, OrganizationLoader, OwnerLoader, ProjectCredentialsLoader, ProjectLoader,
+};
 use db::Connection;
 use mutations::Mutation;
 use poem::{
@@ -77,6 +80,8 @@ use poem::{
 use prelude::*;
 use queries::Query;
 use sea_orm::DatabaseConnection;
+
+use crate::ory_client::OryClient;
 
 #[derive(Debug, Parser)]
 pub struct Args {
@@ -131,6 +136,9 @@ pub struct Context {
     organization_loader: DataLoader<OrganizationLoader>,
     members_loader: DataLoader<MembersLoader>,
     owner_loader: DataLoader<OwnerLoader>,
+    project_credentials_loader: DataLoader<ProjectCredentialsLoader>,
+    project_loader: DataLoader<ProjectLoader>,
+    ory_client: OryClient,
 }
 
 impl Context {
@@ -144,12 +152,19 @@ impl Context {
             DataLoader::new(OrganizationLoader::new(db.clone()), tokio::spawn);
         let members_loader = DataLoader::new(MembersLoader::new(db.clone()), tokio::spawn);
         let owner_loader = DataLoader::new(OwnerLoader::new(db.clone()), tokio::spawn);
+        let project_credentials_loader =
+            DataLoader::new(ProjectCredentialsLoader::new(db.clone()), tokio::spawn);
+        let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
+        let ory_client = OryClient::new();
 
         Ok(Self {
             db,
             organization_loader,
             members_loader,
             owner_loader,
+            project_credentials_loader,
+            project_loader,
+            ory_client,
         })
     }
 }
@@ -165,6 +180,9 @@ pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
         .data(ctx.organization_loader)
         .data(ctx.members_loader)
         .data(ctx.owner_loader)
+        .data(ctx.project_credentials_loader)
+        .data(ctx.project_loader)
+        .data(ctx.ory_client)
         .finish();
 
     Ok(schema)

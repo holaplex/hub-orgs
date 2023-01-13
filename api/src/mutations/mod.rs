@@ -1,3 +1,4 @@
+pub mod credential;
 pub mod invite;
 pub mod organization;
 pub mod project;
