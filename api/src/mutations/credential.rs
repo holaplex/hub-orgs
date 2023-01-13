@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use async_graphql::{self, Context, Error, InputObject, Object, Result, SimpleObject};
 use ory_openapi_client::models::OAuth2Client;
+use reqwest::StatusCode;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
@@ -13,7 +14,7 @@ use crate::{
 #[derive(Default)]
 pub struct Mutation;
 
-#[Object(name = "OrganizationMutation")]
+#[Object(name = "CredentialMutation")]
 impl Mutation {
     /// Res
     ///
@@ -83,6 +84,36 @@ impl Mutation {
         };
 
         Ok(graphql_response)
+    }
+
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
+    async fn delete_credential(&self, ctx: &Context<'_>, id: Uuid) -> Result<String> {
+        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let ory = ctx.data::<OryClient>()?;
+
+        let credential = credentials::Entity::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or_else(|| Error::new("Credential not found in db"))?;
+
+        let delete_result = credential.delete(db).await?;
+
+        let endpoint = format!("/clients/{id}");
+
+        let res = ory.delete(&endpoint).await?;
+
+        if res.status() != StatusCode::NO_CONTENT {
+            let response_text = res.text().await?;
+            return Err(Error::new(response_text));
+        }
+
+        Ok(format!(
+            "{} rows deleted successfully",
+            delete_result.rows_affected
+        ))
     }
 }
 

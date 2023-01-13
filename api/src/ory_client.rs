@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use clap::Parser;
-use reqwest::{Client as ReqwestClient, Url};
+use reqwest::{Client as ReqwestClient, Response, Url};
 use serde::Serialize;
 
 use crate::prelude::*;
@@ -47,5 +47,19 @@ impl OryClient {
             .bytes()
             .await
             .context("failed to parse response to bytes")
+    }
+
+    pub async fn delete(&self, endpoint: &str) -> Result<Response> {
+        let url = Url::parse(&format!("{}/admin/{endpoint}", self.base_url))?;
+
+        let response = self
+            .client
+            .delete(url)
+            .bearer_auth(self.auth_token.clone())
+            .send()
+            .await
+            .context("failed to make post request to ory client")?;
+
+        Ok(response)
     }
 }
