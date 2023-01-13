@@ -66,7 +66,8 @@ use async_graphql::{
 };
 use async_graphql_poem::{GraphQLRequest, GraphQLResponse};
 use dataloaders::{
-    MembersLoader, OrganizationLoader, OwnerLoader, ProjectCredentialsLoader, ProjectLoader,
+    CredentialLoader, MembersLoader, OrganizationLoader, OwnerLoader, ProjectCredentialsLoader,
+    ProjectLoader,
 };
 use db::Connection;
 use mutations::Mutation;
@@ -138,6 +139,7 @@ pub struct Context {
     owner_loader: DataLoader<OwnerLoader>,
     project_credentials_loader: DataLoader<ProjectCredentialsLoader>,
     project_loader: DataLoader<ProjectLoader>,
+    credential_loader: DataLoader<CredentialLoader>,
     ory_client: OryClient,
 }
 
@@ -155,6 +157,7 @@ impl Context {
         let project_credentials_loader =
             DataLoader::new(ProjectCredentialsLoader::new(db.clone()), tokio::spawn);
         let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
+        let credential_loader = DataLoader::new(CredentialLoader::new(db.clone()), tokio::spawn);
         let ory_client = OryClient::new();
 
         Ok(Self {
@@ -164,6 +167,7 @@ impl Context {
             owner_loader,
             project_credentials_loader,
             project_loader,
+            credential_loader,
             ory_client,
         })
     }
@@ -182,6 +186,7 @@ pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
         .data(ctx.owner_loader)
         .data(ctx.project_credentials_loader)
         .data(ctx.project_loader)
+        .data(ctx.credential_loader)
         .data(ctx.ory_client)
         .finish();
 
