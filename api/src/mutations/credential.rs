@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use async_graphql::{self, Context, Error, InputObject, Object, Result, SimpleObject};
-use ory_client::models::OAuth2Client;
+use ory_openapi_client::models::OAuth2Client;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
