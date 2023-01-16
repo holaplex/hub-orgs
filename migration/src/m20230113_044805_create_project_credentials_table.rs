@@ -16,7 +16,13 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ProjectCredentials::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(ProjectCredentials::Id).uuid().primary_key())
+                    .col(
+                        ColumnDef::new(ProjectCredentials::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .extra(" default gen_random_uuid()".to_string()),
+                    )
                     .col(
                         ColumnDef::new(ProjectCredentials::CredentialId)
                             .uuid()

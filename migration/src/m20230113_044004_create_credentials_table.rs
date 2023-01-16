@@ -13,7 +13,13 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Credentials::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(Credentials::Id).uuid().primary_key())
+                    .col(
+                        ColumnDef::new(Credentials::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .extra(" default gen_random_uuid()".to_string()),
+                    )
                     .col(ColumnDef::new(Credentials::ClientId).string().not_null())
                     .col(
                         ColumnDef::new(Credentials::OrganizationId)

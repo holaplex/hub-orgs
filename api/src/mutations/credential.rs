@@ -42,9 +42,10 @@ impl Mutation {
         };
 
         // create oauth_2 using ory client
-        let create_oauth2 = ory.post("clients", request_payload).await?;
+        let create_oauth2 = ory.post("/clients", request_payload).await?;
         // deserialize ory response
         let ory_response: OAuth2Client = serde_json::from_slice(&create_oauth2)?;
+
         let client_id = ory_response
             .client_id
             .ok_or_else(|| Error::new("Invalid response! client_id is null"))?;
@@ -99,9 +100,11 @@ impl Mutation {
             .await?
             .ok_or_else(|| Error::new("Credential not found in db"))?;
 
+        let client_id = credential.client_id.clone();
+
         let delete_result = credential.delete(db).await?;
 
-        let endpoint = format!("/clients/{id}");
+        let endpoint = format!("/clients/{client_id}");
 
         let res = ory.delete(&endpoint).await?;
 

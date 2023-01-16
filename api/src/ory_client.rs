@@ -8,9 +8,9 @@ use crate::prelude::*;
 /// Arguments for establishing a database connection
 #[derive(Debug, Parser)]
 pub struct Args {
-    #[arg(long, env, default_value = "localhost:4445")]
+    #[arg(long, env, default_value = "http://127.0.0.1:4445")]
     ory_base_url: String,
-    #[arg(long, env)]
+    #[arg(long, env, default_value = "")]
     ory_auth_token: String,
 }
 
@@ -22,6 +22,10 @@ pub struct OryClient {
 
 impl OryClient {
     pub(crate) fn new() -> Self {
+        if cfg!(debug_assertions) {
+            dotenv::dotenv().ok();
+        }
+
         let Args {
             ory_base_url,
             ory_auth_token,
@@ -35,7 +39,7 @@ impl OryClient {
     }
 
     pub async fn post(&self, endpoint: &str, body: impl Serialize) -> Result<Bytes> {
-        let url = Url::parse(&format!("{}/admin/{endpoint}", self.base_url))?;
+        let url = Url::parse(&format!("{}/admin", self.base_url))?.join(endpoint)?;
 
         self.client
             .post(url)
@@ -50,7 +54,7 @@ impl OryClient {
     }
 
     pub async fn delete(&self, endpoint: &str) -> Result<Response> {
-        let url = Url::parse(&format!("{}/admin/{endpoint}", self.base_url))?;
+        let url = Url::parse(&format!("{}/admin", self.base_url))?.join(endpoint)?;
 
         let response = self
             .client
