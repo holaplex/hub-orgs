@@ -4,8 +4,10 @@ use async_graphql::{dataloader::DataLoader, *};
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use super::{members, owners};
-use crate::dataloaders::{MembersLoader, OwnerLoader};
+use super::{credentials, members, owners};
+use crate::dataloaders::{
+    credential::OrganizationId, CredentialLoader, MembersLoader, OwnerLoader,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize, SimpleObject)]
 #[sea_orm(table_name = "organizations")]
@@ -30,6 +32,11 @@ impl Model {
     async fn owner(&self, ctx: &Context<'_>) -> Result<Option<owners::Model>> {
         let loader = ctx.data::<DataLoader<OwnerLoader>>()?;
         loader.load_one(self.id).await
+    }
+
+    async fn credentials(&self, ctx: &Context<'_>) -> Result<Option<Vec<credentials::Model>>> {
+        let loader = ctx.data::<DataLoader<CredentialLoader>>()?;
+        loader.load_one(OrganizationId(self.id)).await
     }
 }
 
