@@ -119,6 +119,9 @@ impl<'a> FromRequest<'a> for UserID {
 type AppSchema = Schema<Query, Mutation, EmptySubscription>;
 
 #[handler]
+async fn health() {}
+
+#[handler]
 async fn playground() -> impl IntoResponse {
     Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
 }
@@ -222,6 +225,7 @@ pub async fn main() -> Result<()> {
             Route::new()
                 .at("/graphql", post(graphql_handler))
                 .at("/playground", get(playground))
+                .at("/health", get(health))
                 .data(schema),
         )
         .await
