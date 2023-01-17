@@ -1,0 +1,45 @@
+name: Release Image
+on:
+  push:
+    branches:
+      - main
+jobs:
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: release
+    steps:
+      -
+        name: Checkout
+        uses: actions/checkout@v3
+      -
+        name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      -
+        name: Build and push hub-orgs
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          target: hub-orgs
+          push: true
+          tags: ${{ vars.DOCKERHUB_ORG }}/hub-orgs:${{ github.sha }},${{ vars.DOCKERHUB_ORG }}/hub-orgs:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      -
+        name: Build and push hub-orgs-migrations
+        uses: docker/build-push-action@v3
+        with:
+          context: .
+          file: ./Dockerfile
+          target: migrator
+          push: true
+          tags: ${{ vars.DOCKERHUB_ORG }}/hub-orgs-migrations:${{ github.sha }},${{ vars.DOCKERHUB_ORG }}/hub-orgs-migrations:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

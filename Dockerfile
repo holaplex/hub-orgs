@@ -15,8 +15,12 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY Cargo.* ./
 COPY api api
 COPY migration migration
-RUN cargo build --release
 
+FROM builder AS builder-hub-orgs
+RUN cargo build --release --bin hub-orgs
+
+FROM builder AS builder-migration
+RUN cargo build --release --bin migration
 
 FROM debian:bullseye-slim as base
 WORKDIR /app
@@ -31,7 +35,7 @@ RUN apt-get update -y && \
 RUN mkdir -p bin
 
 FROM base AS hub-orgs
-COPY --from=builder /app/target/release/hub-orgs bin/
+COPY --from=builder-hub-orgs /app/target/release/hub-orgs bin/
 
 FROM base AS migrator
-COPY --from=builder /app/target/release/migration bin/
+COPY --from=builder-migration /app/target/release/migration bin/
