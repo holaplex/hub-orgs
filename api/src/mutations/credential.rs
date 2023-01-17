@@ -91,7 +91,7 @@ impl Mutation {
     ///
     /// # Errors
     /// This function fails if ...
-    async fn delete_credential(&self, ctx: &Context<'_>, id: Uuid) -> Result<String> {
+    async fn delete_credential(&self, ctx: &Context<'_>, id: Uuid) -> Result<Uuid> {
         let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
         let ory = ctx.data::<OryClient>()?;
 
@@ -102,8 +102,6 @@ impl Mutation {
 
         let client_id = credential.client_id.clone();
 
-        let delete_result = credential.delete(db).await?;
-
         let endpoint = format!("/clients/{client_id}");
 
         let res = ory.delete(&endpoint).await?;
@@ -113,10 +111,9 @@ impl Mutation {
             return Err(Error::new(response_text));
         }
 
-        Ok(format!(
-            "{} rows deleted successfully",
-            delete_result.rows_affected
-        ))
+        credential.delete(db).await?;
+
+        Ok(id)
     }
 }
 
