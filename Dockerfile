@@ -36,6 +36,8 @@ RUN mkdir -p bin
 
 FROM base AS hub-orgs
 COPY --from=builder-hub-orgs /app/target/release/hub-orgs bin/
+CMD ["bin/hub-orgs"]
 
 FROM base AS migrator
 COPY --from=builder-migration /app/target/release/migration bin/
+CMD ["bin/migration"]
