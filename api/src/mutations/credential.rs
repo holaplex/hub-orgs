@@ -91,7 +91,11 @@ impl Mutation {
     ///
     /// # Errors
     /// This function fails if ...
-    async fn delete_credential(&self, ctx: &Context<'_>, id: Uuid) -> Result<Uuid> {
+    async fn delete_credential(
+        &self,
+        ctx: &Context<'_>,
+        id: Uuid,
+    ) -> Result<DeleteCredentialPayload> {
         let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
         let ory = ctx.data::<OryClient>()?;
 
@@ -113,7 +117,7 @@ impl Mutation {
 
         credential.delete(db).await?;
 
-        Ok(id)
+        Ok(DeleteCredentialPayload { credential: id })
     }
 }
 
@@ -131,4 +135,10 @@ pub struct CreateCredentialPayload {
     client_secret: String,
     registration_access_token: Option<String>,
     registration_client_uri: Option<String>,
+}
+
+// Request payload for deleting a credential
+#[derive(Debug, Clone, SimpleObject)]
+pub struct DeleteCredentialPayload {
+    credential: Uuid,
 }
