@@ -220,7 +220,7 @@ pub async fn main() -> Result<()> {
         .await
         .context("failed to build schema")?;
 
-    Server::new(TcpListener::bind(format!("127.0.0.1:{port}")))
+    Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
         .run(
             Route::new()
                 .at("/graphql", post(graphql_handler))
