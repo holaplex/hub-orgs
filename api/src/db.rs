@@ -19,7 +19,10 @@ pub struct Args {
     database_url: String,
 }
 
-pub struct Connection(Arc<DatabaseConnection>);
+pub type DatabaseClient = Arc<DatabaseConnection>;
+
+#[derive(Clone)]
+pub struct Connection(DatabaseClient);
 
 impl Connection {
     /// Res
@@ -51,7 +54,7 @@ impl Connection {
 
     #[must_use]
 
-    pub fn get(self) -> Arc<DatabaseConnection> {
+    pub fn get(self) -> DatabaseClient {
         self.0
     }
 }

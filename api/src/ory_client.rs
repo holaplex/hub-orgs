@@ -38,6 +38,10 @@ impl OryClient {
         }
     }
 
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
     pub async fn post(&self, endpoint: &str, body: impl Serialize) -> Result<Bytes> {
         let url = Url::parse(&format!("{}/admin", self.base_url))?.join(endpoint)?;
 
@@ -53,6 +57,10 @@ impl OryClient {
             .context("failed to parse response to bytes")
     }
 
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
     pub async fn delete(&self, endpoint: &str) -> Result<Response> {
         let url = Url::parse(&format!("{}/admin", self.base_url))?.join(endpoint)?;
 

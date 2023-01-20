@@ -45,19 +45,17 @@ mod entities;
 mod mutations;
 mod ory_client;
 mod queries;
+mod svix_client;
 
 mod prelude {
-    pub use std::time::Duration;
+    pub use std::{ops::Deref, str::FromStr, sync::Arc, time::Duration};
 
-    pub use anyhow::{anyhow, bail, Context, Result};
+    pub use anyhow::{anyhow, bail, Context as AnyhowContext, Result};
     pub use chrono::{DateTime, Utc};
     pub use clap::Parser;
     pub use log::debug;
 }
 
-use std::{str::FromStr, sync::Arc};
-
-use anyhow::{Context as AnyhowContext, Result};
 use async_graphql::{
     dataloader::DataLoader,
     extensions::{ApolloTracing, Logger},
@@ -69,8 +67,9 @@ use dataloaders::{
     CredentialLoader, MembersLoader, OrganizationLoader, OwnerLoader, ProjectCredentialsLoader,
     ProjectLoader,
 };
-use db::Connection;
+use db::{Connection, DatabaseClient};
 use mutations::Mutation;
+use ory_client::OryClient;
 use poem::{
     async_trait, get, handler,
     listener::TcpListener,
@@ -80,9 +79,7 @@ use poem::{
 };
 use prelude::*;
 use queries::Query;
-use sea_orm::DatabaseConnection;
-
-use crate::ory_client::OryClient;
+use svix_client::SvixClient;
 
 #[derive(Debug, Parser)]
 pub struct Args {
@@ -136,7 +133,7 @@ async fn graphql_handler(
 }
 
 pub struct Context {
-    db: Arc<DatabaseConnection>,
+    db: DatabaseClient,
     organization_loader: DataLoader<OrganizationLoader>,
     members_loader: DataLoader<MembersLoader>,
     owner_loader: DataLoader<OwnerLoader>,
@@ -144,6 +141,7 @@ pub struct Context {
     project_loader: DataLoader<ProjectLoader>,
     credential_loader: DataLoader<CredentialLoader>,
     ory_client: OryClient,
+    svix_client: SvixClient,
 }
 
 impl Context {
@@ -162,6 +160,7 @@ impl Context {
         let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
         let credential_loader = DataLoader::new(CredentialLoader::new(db.clone()), tokio::spawn);
         let ory_client = OryClient::new();
+        let svix_client = svix_client::Client::new().get();
 
         Ok(Self {
             db,
@@ -172,6 +171,7 @@ impl Context {
             project_loader,
             credential_loader,
             ory_client,
+            svix_client,
         })
     }
 }
@@ -191,6 +191,7 @@ pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
         .data(ctx.project_loader)
         .data(ctx.credential_loader)
         .data(ctx.ory_client)
+        .data(ctx.svix_client)
         .finish();
 
     Ok(schema)

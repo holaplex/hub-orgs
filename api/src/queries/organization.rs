@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use async_graphql::{self, Context, Object, Result};
 use sea_orm::{prelude::*, QueryOrder};
 
-use crate::entities::organizations;
+use crate::{db::DatabaseClient, entities::organizations};
 #[derive(Default)]
 pub struct Query;
 
@@ -14,7 +12,7 @@ impl Query {
     /// # Errors
     /// This function fails if ...
     async fn organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let db = &**ctx.data::<DatabaseClient>()?;
 
         organizations::Entity::find()
             .order_by_desc(organizations::Column::CreatedAt)

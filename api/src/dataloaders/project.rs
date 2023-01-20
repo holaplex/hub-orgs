@@ -1,21 +1,24 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use async_graphql::{dataloader::Loader as DataLoader, FieldError, Result};
 use poem::async_trait;
 use sea_orm::{prelude::*, JoinType, QuerySelect};
 
-use crate::entities::{
-    project_credentials,
-    projects::{self, Column, Entity, Model},
+use crate::{
+    db::DatabaseClient,
+    entities::{
+        project_credentials,
+        projects::{self, Column, Entity, Model},
+    },
 };
 
 pub struct Loader {
-    pub db: Arc<DatabaseConnection>,
+    pub db: DatabaseClient,
 }
 
 impl Loader {
     #[must_use]
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+    pub fn new(db: DatabaseClient) -> Self {
         Self { db }
     }
 }

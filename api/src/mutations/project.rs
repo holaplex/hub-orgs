@@ -1,10 +1,11 @@
-use std::sync::Arc;
-
 use async_graphql::{self, Context, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
 use uuid::Uuid;
 
-use crate::entities::{projects, projects::ActiveModel};
+use crate::{
+    db::DatabaseClient,
+    entities::{projects, projects::ActiveModel},
+};
 
 #[derive(Default)]
 pub struct Mutation;
@@ -20,7 +21,7 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateProjectInput,
     ) -> Result<projects::Model> {
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let db = &**ctx.data::<DatabaseClient>()?;
 
         ActiveModel::from(input)
             .insert(db)

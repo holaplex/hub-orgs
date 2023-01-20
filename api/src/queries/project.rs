@@ -1,9 +1,7 @@
-use std::sync::Arc;
-
 use async_graphql::{self, Context, Object, Result};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 
-use crate::entities::projects;
+use crate::{db::DatabaseClient, entities::projects};
 
 #[derive(Default)]
 pub struct Query;
@@ -20,7 +18,7 @@ impl Query {
         #[graphql(default = 25)] limit: u64,
         #[graphql(default = 0)] offset: u64,
     ) -> Result<Vec<projects::Model>> {
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let db = &**ctx.data::<DatabaseClient>()?;
 
         projects::Entity::find()
             .order_by_desc(projects::Column::CreatedAt)
@@ -35,7 +33,7 @@ impl Query {
     /// # Errors
     /// This function fails if ...
     async fn project(&self, ctx: &Context<'_>, id: uuid::Uuid) -> Result<Option<projects::Model>> {
-        let db = ctx.data::<DatabaseConnection>()?;
+        let db = &**ctx.data::<DatabaseClient>()?;
 
         projects::Entity::find_by_id(id)
             .one(db)

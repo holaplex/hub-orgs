@@ -1,21 +1,24 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use async_graphql::{dataloader::Loader as DataLoader, FieldError, Result};
 use poem::async_trait;
 use sea_orm::prelude::*;
 
-use crate::entities::{
-    members::{Column as MColumn, Entity as MEntity, Model as MModel},
-    owners::{Column, Entity, Model},
+use crate::{
+    db::DatabaseClient,
+    entities::{
+        members::{Column as MColumn, Entity as MEntity, Model as MModel},
+        owners::{Column, Entity, Model},
+    },
 };
 
 pub struct MembersLoader {
-    pub db: Arc<DatabaseConnection>,
+    pub db: DatabaseClient,
 }
 
 impl MembersLoader {
     #[must_use]
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+    pub fn new(db: DatabaseClient) -> Self {
         Self { db }
     }
 }
@@ -48,12 +51,12 @@ impl DataLoader<Uuid> for MembersLoader {
 }
 
 pub struct OwnerLoader {
-    pub db: Arc<DatabaseConnection>,
+    pub db: DatabaseClient,
 }
 
 impl OwnerLoader {
     #[must_use]
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+    pub fn new(db: DatabaseClient) -> Self {
         Self { db }
     }
 }

@@ -1200,6 +1200,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "hmac-sha256"
+version = "1.1.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc736091aacb31ddaa4cd5f6988b3c21e99913ac846b41f32538c5fae5d71bfe"
+
+[[package]]
 name = "http"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1256,6 +1262,7 @@ dependencies = [
  "serde_with",
  "tokio",
  "uuid",
+ "webhooks",
 ]
 
 [[package]]
@@ -3340,6 +3347,24 @@ checksum = "bcda906d8be16e728fd5adc5b729afad4e444e106ab28cd1c7256e54fa61510f"
 dependencies = [
  "js-sys",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "webhooks"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a08f05eb0792f6ce95b46d7be168011b138c9d823ddffc38a02201160a8a7651"
+dependencies = [
+ "base64",
+ "hmac-sha256",
+ "http",
+ "reqwest",
+ "serde",
+ "serde_derive",
+ "serde_json",
+ "thiserror",
+ "time 0.3.17",
+ "url",
 ]
 
 [[package]]

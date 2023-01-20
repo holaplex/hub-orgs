@@ -1,11 +1,10 @@
-use std::sync::Arc;
-
 use async_graphql::{self, Context, Error, InputObject, Object, Result, SimpleObject};
 use ory_openapi_generated_client::models::OAuth2Client;
 use reqwest::StatusCode;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
+    db::DatabaseClient,
     entities::{credentials, project_credentials},
     ory_client::OryClient,
     UserID,
@@ -25,7 +24,7 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateCredentialInput,
     ) -> Result<CreateCredentialPayload> {
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let db = &**ctx.data::<DatabaseClient>()?;
         let ory = ctx.data::<OryClient>()?;
         let UserID(id) = ctx.data::<UserID>()?;
 
@@ -96,7 +95,7 @@ impl Mutation {
         ctx: &Context<'_>,
         id: Uuid,
     ) -> Result<DeleteCredentialPayload> {
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let db = &**ctx.data::<DatabaseClient>()?;
         let ory = ctx.data::<OryClient>()?;
 
         let credential = credentials::Entity::find_by_id(id)

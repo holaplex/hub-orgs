@@ -18,7 +18,7 @@ async fn build_client()
     Ok(cli)
 }
 
-pub async fn build_schema(db: Arc<DatabaseConnection>) -> Result<AppSchema> {
+pub async fn build_schema(db: DatabaseClient) -> Result<AppSchema> {
     let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
         .extension(ApolloTracing)
         .extension(Logger)

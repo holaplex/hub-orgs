@@ -1,10 +1,11 @@
-use std::sync::Arc;
-
 use async_graphql::{Context, Object, Result, Union};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 use uuid::Uuid;
 
-use crate::entities::{members, owners};
+use crate::{
+    db::DatabaseClient,
+    entities::{members, owners},
+};
 
 #[derive(Union)]
 enum Affiliation {
@@ -29,7 +30,7 @@ impl User {
         #[graphql(default = 25)] limit: u64,
         #[graphql(default = 0)] offset: u64,
     ) -> Result<Vec<Affiliation>> {
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let db = &**ctx.data::<DatabaseClient>()?;
         let user_id = self.id;
 
         let org_owners = owners::Entity::find()
