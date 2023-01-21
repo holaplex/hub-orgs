@@ -1,4 +1,4 @@
-use async_graphql::{self, Context, Error, InputObject, Object, Result};
+use async_graphql::{self, Context, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
 use webhooks::api::ApplicationIn;
 
@@ -31,7 +31,7 @@ impl Mutation {
 
         let mut org_model = ActiveModel::from(input.clone()).insert(db).await?;
 
-        if let Ok(res) = svix
+        match svix
             .application()
             .create(
                 ApplicationIn {
@@ -43,21 +43,24 @@ impl Mutation {
             )
             .await
         {
-            let mut org: ActiveModel = org_model.clone().into();
-            org.svix_app_id = Set(res.id);
-            org_model = org.update(db).await?;
+            Ok(res) => {
+                let mut org: ActiveModel = org_model.clone().into();
+                org.svix_app_id = Set(res.id);
+                org_model = org.update(db).await?;
 
-            let owner = owners::ActiveModel {
-                user_id: Set(user_id),
-                organization_id: Set(org_model.id),
-                ..Default::default()
-            };
+                let owner = owners::ActiveModel {
+                    user_id: Set(user_id),
+                    organization_id: Set(org_model.id),
+                    ..Default::default()
+                };
 
-            owner.insert(db).await?;
-        } else {
-            org_model.delete(db).await?;
-            return Err(Error::new("failed to create svix application"));
-        }
+                owner.insert(db).await?;
+            },
+            Err(err) => {
+                org_model.delete(db).await?;
+                return Err(err.into());
+            },
+        };
 
         Ok(org_model)
     }
