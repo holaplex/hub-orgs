@@ -22,10 +22,6 @@ pub struct OryClient {
 
 impl OryClient {
     pub(crate) fn new() -> Self {
-        if cfg!(debug_assertions) {
-            dotenv::dotenv().ok();
-        }
-
         let Args {
             ory_base_url,
             ory_auth_token,

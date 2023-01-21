@@ -13,13 +13,13 @@ use crate::dataloaders::{
 #[sea_orm(table_name = "organizations")]
 #[graphql(complex, concrete(name = "Organization", params()))]
 pub struct Model {
-    #[sea_orm(primary_key, column_type = "Uuid")]
-    pub id: uuid::Uuid,
-    #[sea_orm(column_type = "Text")]
+    #[sea_orm(primary_key, auto_increment = false)]
+    pub id: Uuid,
+    #[sea_orm(unique)]
     pub name: String,
     pub created_at: DateTime,
-    #[sea_orm(nullable)]
     pub deactivated_at: Option<DateTime>,
+    pub svix_app_id: String,
 }
 
 #[ComplexObject]

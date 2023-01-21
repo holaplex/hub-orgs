@@ -56,6 +56,7 @@ pub async fn test_organization_query() -> Result<()> {
                 name: "hello".to_string(),
                 created_at: time,
                 deactivated_at: None,
+                svix_app_id: "app_".to_string(),
             }]])
             .into_connection(),
     );

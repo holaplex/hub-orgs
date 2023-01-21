@@ -1,9 +1,11 @@
-use async_graphql::{self, Context, InputObject, Object, Result};
+use async_graphql::{self, Context, Error, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
+use webhooks::api::ApplicationIn;
 
 use crate::{
     db::DatabaseClient,
     entities::{organizations, organizations::ActiveModel, owners},
+    svix_client::SvixClient,
     UserID,
 };
 
@@ -23,24 +25,45 @@ impl Mutation {
     ) -> Result<organizations::Model> {
         let UserID(id) = ctx.data::<UserID>()?;
         let db = &**ctx.data::<DatabaseClient>()?;
+        let svix = &**ctx.data::<SvixClient>()?;
 
         let user_id = id.ok_or_else(|| "no user id")?;
 
-        let org = ActiveModel::from(input).insert(db).await?;
+        let mut org_model = ActiveModel::from(input.clone()).insert(db).await?;
 
-        let owner = owners::ActiveModel {
-            user_id: Set(user_id),
-            organization_id: Set(org.id),
-            ..Default::default()
-        };
+        if let Ok(res) = svix
+            .application()
+            .create(
+                ApplicationIn {
+                    name: input.name,
+                    rate_limit: None,
+                    uid: Some(org_model.id.to_string()),
+                },
+                None,
+            )
+            .await
+        {
+            let mut org: ActiveModel = org_model.clone().into();
+            org.svix_app_id = Set(res.id);
+            org_model = org.update(db).await?;
 
-        owner.insert(db).await?;
+            let owner = owners::ActiveModel {
+                user_id: Set(user_id),
+                organization_id: Set(org_model.id),
+                ..Default::default()
+            };
 
-        Ok(org)
+            owner.insert(db).await?;
+        } else {
+            org_model.delete(db).await?;
+            return Err(Error::new("failed to create svix application"));
+        }
+
+        Ok(org_model)
     }
 }
 
-#[derive(InputObject)]
+#[derive(InputObject, Clone)]
 pub struct CreateOrganizationInput {
     pub name: String,
 }

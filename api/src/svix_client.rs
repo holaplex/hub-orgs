@@ -19,10 +19,6 @@ pub struct Client(SvixClient);
 
 impl Client {
     pub(crate) fn new() -> Self {
-        if cfg!(debug_assertions) {
-            dotenv::dotenv().ok();
-        }
-
         let Args {
             svix_base_url,
             svix_auth_token,

@@ -150,6 +150,8 @@ impl Context {
             .await
             .context("failed to get database connection")?
             .get();
+        let ory_client = OryClient::new();
+        let svix_client = svix_client::Client::new().get();
 
         let organization_loader =
             DataLoader::new(OrganizationLoader::new(db.clone()), tokio::spawn);
@@ -159,8 +161,6 @@ impl Context {
             DataLoader::new(ProjectCredentialsLoader::new(db.clone()), tokio::spawn);
         let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
         let credential_loader = DataLoader::new(CredentialLoader::new(db.clone()), tokio::spawn);
-        let ory_client = OryClient::new();
-        let svix_client = svix_client::Client::new().get();
 
         Ok(Self {
             db,
