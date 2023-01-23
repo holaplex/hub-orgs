@@ -1,21 +1,25 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use async_graphql::{dataloader::Loader as DataLoader, FieldError, Result};
 use poem::async_trait;
 use sea_orm::prelude::*;
 
-use crate::entities::{
-    members::{Column as MColumn, Entity as MEntity, Model as MModel},
-    owners::{Column, Entity, Model},
+use crate::{
+    db::Connection,
+    entities::{
+        members::{Column as MColumn, Entity as MEntity, Member},
+        owners::{Column, Entity, Owner},
+    },
 };
 
+#[derive(Debug, Clone)]
 pub struct MembersLoader {
-    pub db: Arc<DatabaseConnection>,
+    pub db: Connection,
 }
 
 impl MembersLoader {
     #[must_use]
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+    pub fn new(db: Connection) -> Self {
         Self { db }
     }
 }
@@ -23,7 +27,7 @@ impl MembersLoader {
 #[async_trait]
 impl DataLoader<Uuid> for MembersLoader {
     type Error = FieldError;
-    type Value = Vec<MModel>;
+    type Value = Vec<Member>;
 
     async fn load(
         &self,
@@ -31,7 +35,7 @@ impl DataLoader<Uuid> for MembersLoader {
     ) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
         let members = MEntity::find()
             .filter(MColumn::OrganizationId.is_in(organization_ids.iter().map(ToOwned::to_owned)))
-            .all(&*self.db)
+            .all(self.db.get())
             .await?;
 
         let mut hashmap = HashMap::new();
@@ -40,20 +44,21 @@ impl DataLoader<Uuid> for MembersLoader {
             hashmap
                 .entry(m.organization_id)
                 .or_insert(Vec::new())
-                .push(m);
+                .push(m.into());
         }
 
         Ok(hashmap)
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct OwnerLoader {
-    pub db: Arc<DatabaseConnection>,
+    pub db: Connection,
 }
 
 impl OwnerLoader {
     #[must_use]
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+    pub fn new(db: Connection) -> Self {
         Self { db }
     }
 }
@@ -61,14 +66,14 @@ impl OwnerLoader {
 #[async_trait]
 impl DataLoader<Uuid> for OwnerLoader {
     type Error = FieldError;
-    type Value = Model;
+    type Value = Owner;
 
     async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
         let owners = Entity::find()
             .filter(Column::Id.is_in(keys.iter().map(ToOwned::to_owned)))
-            .all(&*self.db)
+            .all(self.db.get())
             .await?;
 
-        Ok(owners.iter().map(|o| (o.id, *o)).collect())
+        Ok(owners.iter().map(|o| (o.id, (*o).into())).collect())
     }
 }

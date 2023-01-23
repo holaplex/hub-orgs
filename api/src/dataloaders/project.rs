@@ -1,21 +1,25 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use async_graphql::{dataloader::Loader as DataLoader, FieldError, Result};
 use poem::async_trait;
 use sea_orm::{prelude::*, JoinType, QuerySelect};
 
-use crate::entities::{
-    project_credentials,
-    projects::{self, Column, Entity, Model},
+use crate::{
+    db::Connection,
+    entities::{
+        project_credentials,
+        projects::{self, Column, Entity, Model},
+    },
 };
 
+#[derive(Debug, Clone)]
 pub struct Loader {
-    pub db: Arc<DatabaseConnection>,
+    pub db: Connection,
 }
 
 impl Loader {
     #[must_use]
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+    pub fn new(db: Connection) -> Self {
         Self { db }
     }
 }
@@ -28,7 +32,7 @@ impl DataLoader<Uuid> for Loader {
     async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
         let projects = Entity::find()
             .filter(Column::Id.is_in(keys.iter().map(ToOwned::to_owned)))
-            .all(&*self.db)
+            .all(self.db.get())
             .await?;
 
         Ok(projects
@@ -38,7 +42,7 @@ impl DataLoader<Uuid> for Loader {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, Copy, PartialEq, Eq, Hash)]
 pub struct CredentialId(pub Uuid);
 
 #[async_trait]
@@ -58,7 +62,7 @@ impl DataLoader<CredentialId> for Loader {
                     project_credentials::Relation::Projects.def(),
                 )
                 .filter(project_credentials::Column::CredentialId.is_in(keys.iter().map(|c| c.0)))
-                .all(&*self.db)
+                .all(self.db.get())
                 .await?;
 
         Ok(project_credentials

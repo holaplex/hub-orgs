@@ -1,10 +1,11 @@
-use std::sync::Arc;
-
 use async_graphql::{self, Context, Object, Result};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 
-use crate::entities::{invites, sea_orm_active_enums::InviteStatus};
-#[derive(Debug, Default)]
+use crate::{
+    entities::{invites, sea_orm_active_enums::InviteStatus},
+    AppContext,
+};
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Query;
 
 #[Object(name = "InvitesQuery")]
@@ -20,7 +21,7 @@ impl Query {
         #[graphql(default = 0)] offset: u64,
         status: Option<InviteStatus>,
     ) -> Result<Vec<invites::Model>> {
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
 
         let mut query = invites::Entity::find();
 
@@ -32,7 +33,7 @@ impl Query {
             .limit(limit)
             .offset(offset)
             .order_by_desc(invites::Column::CreatedAt)
-            .all(db)
+            .all(db.get())
             .await
             .map_err(Into::into)
     }

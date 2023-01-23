@@ -1,24 +1,25 @@
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 
-use hub_core::{clap, prelude::*};
+use hub_core::{anyhow::Result, clap, prelude::*};
 pub use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
 /// Arguments for establishing a database connection
 #[derive(Debug, clap::Args)]
 pub struct DbArgs {
     #[arg(long, env, default_value_t = 500)]
-    max_connections: u32,
+    pub max_connections: u32,
     #[arg(long, env, default_value_t = 60)]
-    connection_timeout: u64,
+    pub connection_timeout: u64,
     #[arg(long, env, default_value_t = 10)]
-    acquire_timeout: u64,
+    pub acquire_timeout: u64,
     #[arg(long, env, default_value_t = 60)]
-    idle_timeout: u64,
+    pub idle_timeout: u64,
     #[arg(long, env)]
-    database_url: String,
+    pub database_url: String,
 }
 
-pub struct Connection(Arc<DatabaseConnection>);
+#[derive(Debug, Clone)]
+pub struct Connection(DatabaseConnection);
 
 impl Connection {
     /// Res
@@ -41,16 +42,15 @@ impl Connection {
             .idle_timeout(Duration::from_secs(idle_timeout))
             .clone();
 
-        let db = Database::connect(options)
+        let connection = sea_orm::Database::connect(options)
             .await
             .context("failed to get database connection")?;
 
-        Ok(Self(Arc::new(db)))
+        Ok(Self(connection))
     }
 
     #[must_use]
-
-    pub fn get(self) -> Arc<DatabaseConnection> {
-        self.0
+    pub fn get(&self) -> &DatabaseConnection {
+        &self.0
     }
 }
