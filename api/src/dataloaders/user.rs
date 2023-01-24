@@ -69,6 +69,6 @@ impl DataLoader<Uuid> for OwnerLoader {
             .all(&*self.db)
             .await?;
 
-        Ok(owners.iter().map(|o| (o.id, o.clone())).collect())
+        Ok(owners.iter().map(|o| (o.id, *o)).collect())
     }
 }

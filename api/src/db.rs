@@ -1,19 +1,18 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
+use hub_core::{clap, prelude::*};
 pub use sea_orm::{ConnectOptions, Database, DatabaseConnection};
 
-use crate::prelude::*;
-
 /// Arguments for establishing a database connection
-#[derive(Debug, Parser)]
-pub struct Args {
-    #[arg(long, env, default_value = "500")]
+#[derive(Debug, clap::Args)]
+pub struct DbArgs {
+    #[arg(long, env, default_value_t = 500)]
     max_connections: u32,
-    #[arg(long, env, default_value = "60")]
+    #[arg(long, env, default_value_t = 60)]
     connection_timeout: u64,
-    #[arg(long, env, default_value = "10")]
+    #[arg(long, env, default_value_t = 10)]
     acquire_timeout: u64,
-    #[arg(long, env, default_value = "60")]
+    #[arg(long, env, default_value_t = 60)]
     idle_timeout: u64,
     #[arg(long, env)]
     database_url: String,
@@ -26,14 +25,14 @@ impl Connection {
     ///
     /// # Errors
     /// This function fails if ...
-    pub async fn new() -> Result<Self> {
-        let Args {
+    pub async fn new(args: DbArgs) -> Result<Self> {
+        let DbArgs {
             max_connections,
             connection_timeout,
             acquire_timeout,
             idle_timeout,
             database_url,
-        } = Args::parse();
+        } = args;
 
         let options = ConnectOptions::new(database_url)
             .max_connections(max_connections)

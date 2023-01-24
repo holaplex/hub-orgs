@@ -5,7 +5,7 @@ use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 
 use crate::entities::projects;
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Query;
 
 #[Object(name = "ProjectQuery")]
@@ -34,7 +34,7 @@ impl Query {
     ///
     /// # Errors
     /// This function fails if ...
-    async fn project(&self, ctx: &Context<'_>, id: uuid::Uuid) -> Result<Option<projects::Model>> {
+    async fn project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Option<projects::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 
         projects::Entity::find_by_id(id)
@@ -51,7 +51,7 @@ impl Query {
     async fn find_project_by_id(
         &self,
         ctx: &Context<'_>,
-        #[graphql(key)] id: uuid::Uuid,
+        #[graphql(key)] id: Uuid,
     ) -> Result<Option<projects::Model>> {
         self.project(ctx, id).await
     }

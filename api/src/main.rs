@@ -1,63 +1,20 @@
-//!
-
 #![deny(
-    clippy::pedantic,
-    clippy::match_wildcard_for_single_variants,
-    clippy::redundant_closure_for_method_calls,
-    clippy::cargo
-)]
-#![warn(
-    clippy::perf,
-    clippy::complexity,
-    clippy::style,
+    clippy::disallowed_methods,
     clippy::suspicious,
-    clippy::correctness,
-    clippy::module_name_repetitions,
-    clippy::similar_names,
-    clippy::if_not_else,
-    clippy::must_use_candidate,
-    clippy::missing_errors_doc,
-    clippy::option_if_let_else,
-    clippy::match_same_arms,
-    clippy::default_trait_access,
-    clippy::map_flatten,
-    clippy::map_unwrap_or,
-    clippy::explicit_iter_loop,
-    clippy::too_many_lines,
-    clippy::cast_sign_loss,
-    clippy::unused_self,
-    clippy::cast_lossless,
-    clippy::cast_possible_truncation,
-    clippy::use_self,
-    clippy::needless_borrow,
-    clippy::redundant_pub_crate,
-    clippy::useless_let_if_seq,
-    // missing_docs,
-    clippy::upper_case_acronyms
+    clippy::style,
+    missing_debug_implementations,
+    missing_copy_implementations
 )]
-#![forbid(unsafe_code)]
-#![allow(clippy::unused_async)]
+#![warn(clippy::pedantic, clippy::cargo)]
+#![allow(clippy::module_name_repetitions)]
 
 mod dataloaders;
 mod db;
-#[allow(clippy::pedantic)]
 mod entities;
 mod mutations;
 mod ory_client;
 mod queries;
 
-mod prelude {
-    pub use std::time::Duration;
-
-    pub use anyhow::{anyhow, bail, Context, Result};
-    pub use chrono::{DateTime, Utc};
-    pub use clap::Parser;
-    pub use log::debug;
-}
-
-use std::{str::FromStr, sync::Arc};
-
-use anyhow::{Context as AnyhowContext, Result};
 use async_graphql::{
     dataloader::DataLoader,
     extensions::{ApolloTracing, Logger},
@@ -70,34 +27,41 @@ use dataloaders::{
     ProjectLoader,
 };
 use db::Connection;
+use hub_core::{clap, prelude::*, tokio, uuid::Uuid};
 use mutations::Mutation;
 use poem::{
-    async_trait, get, handler,
+    get, handler,
     listener::TcpListener,
     post,
     web::{Data, Html},
     EndpointExt, FromRequest, IntoResponse, Request, RequestBody, Route, Server,
 };
-use prelude::*;
 use queries::Query;
 use sea_orm::DatabaseConnection;
 
 use crate::ory_client::OryClient;
 
-#[derive(Debug, Parser)]
+#[derive(Debug, clap::Args)]
+#[command(version, author, about)]
 pub struct Args {
-    #[clap(short, long, env, default_value = "3002")]
+    #[arg(short, long, env, default_value_t = 3002)]
     port: u16,
+
+    #[command(flatten)]
+    db: db::DbArgs,
+
+    #[command(flatten)]
+    ory: ory_client::OryArgs,
 }
 
-#[derive(Debug)]
-pub struct UserID(Option<uuid::Uuid>);
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct UserID(Option<Uuid>);
 
 impl TryFrom<&str> for UserID {
-    type Error = anyhow::Error;
+    type Error = Error;
 
     fn try_from(value: &str) -> Result<Self> {
-        let id = uuid::Uuid::from_str(value)?;
+        let id = Uuid::from_str(value)?;
 
         Ok(Self(Some(id)))
     }
@@ -119,10 +83,10 @@ impl<'a> FromRequest<'a> for UserID {
 type AppSchema = Schema<Query, Mutation, EmptySubscription>;
 
 #[handler]
-async fn health() {}
+fn health() {}
 
 #[handler]
-async fn playground() -> impl IntoResponse {
+fn playground() -> impl IntoResponse {
     Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
 }
 
@@ -135,6 +99,7 @@ async fn graphql_handler(
     schema.execute(req.0.data(user_id)).await.into()
 }
 
+#[allow(missing_debug_implementations)]
 pub struct Context {
     db: Arc<DatabaseConnection>,
     organization_loader: DataLoader<OrganizationLoader>,
@@ -147,8 +112,8 @@ pub struct Context {
 }
 
 impl Context {
-    async fn new() -> Result<Self> {
-        let db = Connection::new()
+    async fn new(db_args: db::DbArgs, ory_args: ory_client::OryArgs) -> Result<Self> {
+        let db = Connection::new(db_args)
             .await
             .context("failed to get database connection")?
             .get();
@@ -161,7 +126,7 @@ impl Context {
             DataLoader::new(ProjectCredentialsLoader::new(db.clone()), tokio::spawn);
         let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
         let credential_loader = DataLoader::new(CredentialLoader::new(db.clone()), tokio::spawn);
-        let ory_client = OryClient::new();
+        let ory_client = OryClient::new(ory_args);
 
         Ok(Self {
             db,
@@ -178,7 +143,7 @@ impl Context {
 /// Builds the GraphQL Schema, attaching the Database to the context
 /// # Errors
 /// This function fails if ...
-pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
+pub fn build_schema(ctx: Context) -> Result<AppSchema> {
     let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
         .extension(ApolloTracing)
         .extension(Logger)
@@ -196,40 +161,32 @@ pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
     Ok(schema)
 }
 
-#[tokio::main]
-pub async fn main() -> Result<()> {
-    if cfg!(debug_assertions) {
-        dotenv::dotenv().ok();
-    }
+pub fn main() {
+    let opts = hub_core::StartConfig {
+        service_name: "hub-orgs",
+    };
 
-    let Args { port } = Args::parse();
+    hub_core::run(opts, |common, args| {
+        let Args { port, db, ory } = args;
 
-    env_logger::builder()
-        .filter_level(if cfg!(debug_assertions) {
-            log::LevelFilter::Debug
-        } else {
-            log::LevelFilter::Info
+        common.rt.block_on(async move {
+            let app_context = Context::new(db, ory)
+                .await
+                .context("failed to build app context")?;
+            let schema = build_schema(app_context).context("failed to build schema")?;
+
+            Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
+                .run(
+                    Route::new()
+                        .at("/graphql", post(graphql_handler))
+                        .at("/playground", get(playground))
+                        .at("/health", get(health))
+                        .data(schema),
+                )
+                .await
+                .context("failed to build graphql server")
         })
-        .parse_default_env()
-        .init();
-
-    let app_context = Context::new()
-        .await
-        .context("failed to build app context")?;
-    let schema = build_schema(app_context)
-        .await
-        .context("failed to build schema")?;
-
-    Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
-        .run(
-            Route::new()
-                .at("/graphql", post(graphql_handler))
-                .at("/playground", get(playground))
-                .at("/health", get(health))
-                .data(schema),
-        )
-        .await
-        .context("failed to build graphql server")
+    });
 }
 
 #[cfg(test)]

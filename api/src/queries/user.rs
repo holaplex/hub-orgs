@@ -2,7 +2,6 @@ use std::sync::Arc;
 
 use async_graphql::{Context, Object, Result, Union};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
-use uuid::Uuid;
 
 use crate::entities::{members, owners};
 
@@ -60,7 +59,7 @@ impl User {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Query;
 
 #[Object(name = "UserQuery")]

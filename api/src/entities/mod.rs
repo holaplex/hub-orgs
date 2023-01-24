@@ -1,3 +1,5 @@
+#![allow(clippy::wildcard_imports)] // for generated code
+
 pub mod credentials;
 pub mod invites;
 pub mod members;

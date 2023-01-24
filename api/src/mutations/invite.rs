@@ -2,15 +2,13 @@ use std::sync::Arc;
 
 use async_graphql::{self, Context, InputObject, Json, Object, Result};
 use sea_orm::{prelude::*, Set};
-use uuid::Uuid;
 
 use crate::{
     entities::{invites, sea_orm_active_enums::InviteStatus},
     UserID,
 };
 
-#[derive(Default)]
-
+#[derive(Debug, Default)]
 pub struct Mutation;
 
 #[Object(name = "InviteMutation")]

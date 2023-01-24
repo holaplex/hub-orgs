@@ -8,7 +8,7 @@ use crate::{
     UserID,
 };
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Mutation;
 
 #[Object(name = "OrganizationMutation")]
@@ -41,7 +41,7 @@ impl Mutation {
     }
 }
 
-#[derive(InputObject)]
+#[derive(Debug, InputObject)]
 pub struct CreateOrganizationInput {
     pub name: String,
 }

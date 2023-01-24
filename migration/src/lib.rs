@@ -1,4 +1,3 @@
-#[allow(clippy::all)]
 pub use sea_orm_migration::prelude::*;
 
 mod m20221215_150612_create_organizations_table;
