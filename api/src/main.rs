@@ -65,7 +65,7 @@ use async_graphql::{
 use async_graphql_poem::{GraphQLRequest, GraphQLResponse};
 use dataloaders::{
     CredentialLoader, MembersLoader, OrganizationLoader, OwnerLoader, ProjectCredentialsLoader,
-    ProjectLoader,
+    ProjectLoader, WebhookProjectsLoader,
 };
 use db::{Connection, DatabaseClient};
 use mutations::Mutation;
@@ -140,6 +140,7 @@ pub struct Context {
     project_credentials_loader: DataLoader<ProjectCredentialsLoader>,
     project_loader: DataLoader<ProjectLoader>,
     credential_loader: DataLoader<CredentialLoader>,
+    webhook_projects_loader: DataLoader<WebhookProjectsLoader>,
     ory_client: OryClient,
     svix_client: SvixClient,
 }
@@ -161,6 +162,8 @@ impl Context {
             DataLoader::new(ProjectCredentialsLoader::new(db.clone()), tokio::spawn);
         let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
         let credential_loader = DataLoader::new(CredentialLoader::new(db.clone()), tokio::spawn);
+        let webhook_projects_loader =
+            DataLoader::new(WebhookProjectsLoader::new(db.clone()), tokio::spawn);
 
         Ok(Self {
             db,
@@ -170,6 +173,7 @@ impl Context {
             project_credentials_loader,
             project_loader,
             credential_loader,
+            webhook_projects_loader,
             ory_client,
             svix_client,
         })
@@ -190,6 +194,7 @@ pub async fn build_schema(ctx: Context) -> Result<AppSchema> {
         .data(ctx.project_credentials_loader)
         .data(ctx.project_loader)
         .data(ctx.credential_loader)
+        .data(ctx.webhook_projects_loader)
         .data(ctx.ory_client)
         .data(ctx.svix_client)
         .finish();
