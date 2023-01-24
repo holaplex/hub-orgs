@@ -173,8 +173,7 @@ pub fn main() {
             let app_context = Context::new(db, ory)
                 .await
                 .context("failed to build app context")?;
-            let schema = build_schema(app_context)
-                .context("failed to build schema")?;
+            let schema = build_schema(app_context).context("failed to build schema")?;
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
