@@ -42,13 +42,7 @@ impl Mutation {
             // create endpoint request body
             let create_endpoint = EndpointIn {
                 channels: Some(input.projects.iter().map(ToString::to_string).collect()),
-                filter_types: Some(
-                    input
-                        .event_types
-                        .iter()
-                        .map(|e| e.filter_type().to_string())
-                        .collect(),
-                ),
+                filter_types: Some(input.filter_types.iter().map(|e| e.format()).collect()),
                 version: 1,
                 description: None,
                 disabled: Some(false),
@@ -110,7 +104,7 @@ pub struct CreateWebhookInput {
     pub endpoint: String,
     pub organization: Uuid,
     pub projects: Vec<Uuid>,
-    pub event_types: Vec<EventTypes>,
+    pub filter_types: Vec<FilterType>,
 }
 
 #[derive(SimpleObject, Debug, Clone)]
@@ -120,7 +114,7 @@ pub struct CreateWebhookPayload {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Copy, Enum)]
-pub enum EventTypes {
+pub enum FilterType {
     ProjectCreated,
     ProjectDeactivated,
     InvitationSent,
@@ -130,16 +124,16 @@ pub enum EventTypes {
     CredentialDeleted,
 }
 
-impl EventTypes {
-    fn filter_type(self) -> &'static str {
+impl FilterType {
+    fn format(self) -> String {
         match self {
-            Self::ProjectCreated => "project.created",
-            Self::ProjectDeactivated => "project.deactivated",
-            Self::InvitationSent => "invitation.sent",
-            Self::InvitationAccepted => "invitation.accepted",
-            Self::InvitationRevoked => "invitation.revoked",
-            Self::CredentialCreated => "credential.created",
-            Self::CredentialDeleted => "credential.deleted",
+            Self::ProjectCreated => "project.created".to_string(),
+            Self::ProjectDeactivated => "project.deactivated".to_string(),
+            Self::InvitationSent => "invitation.sent".to_string(),
+            Self::InvitationAccepted => "invitation.accepted".to_string(),
+            Self::InvitationRevoked => "invitation.revoked".to_string(),
+            Self::CredentialCreated => "credential.created".to_string(),
+            Self::CredentialDeleted => "credential.deleted".to_string(),
         }
     }
 }

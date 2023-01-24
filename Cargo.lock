@@ -1252,6 +1252,7 @@ dependencies = [
  "clap 4.0.29",
  "dotenv",
  "env_logger",
+ "indexmap",
  "log",
  "ory-client",
  "poem",
