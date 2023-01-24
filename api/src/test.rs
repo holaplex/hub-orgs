@@ -1,36 +1,31 @@
-use std::str::FromStr;
-
+use hub_core::{chrono, uuid};
 use poem::{middleware::AddDataEndpoint, test::TestClient};
 use sea_orm::{DatabaseBackend, MockDatabase};
 
 use super::*;
 use crate::entities::{organizations, projects};
 
-async fn build_client()
--> Result<TestClient<AddDataEndpoint<Route, Schema<Query, Mutation, EmptySubscription>>>> {
+fn build_client() -> TestClient<AddDataEndpoint<Route, Schema<Query, Mutation, EmptySubscription>>>
+{
     let db = Arc::new(MockDatabase::new(DatabaseBackend::Postgres).into_connection());
 
-    let schema = build_schema(db).await.unwrap();
+    let schema = build_schema(db);
 
     let app = Route::new().at("/", graphql_handler).data(schema);
-    let cli = poem::test::TestClient::new(app);
-
-    Ok(cli)
+    poem::test::TestClient::new(app)
 }
 
-pub async fn build_schema(db: Arc<DatabaseConnection>) -> Result<AppSchema> {
-    let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
+pub fn build_schema(db: Arc<DatabaseConnection>) -> AppSchema {
+    Schema::build(Query::default(), Mutation::default(), EmptySubscription)
         .extension(ApolloTracing)
         .extension(Logger)
         .data(db)
-        .finish();
-
-    Ok(schema)
+        .finish()
 }
 
 #[tokio::test]
 pub async fn test_user_id_header() -> Result<()> {
-    let cli = build_client().await?;
+    let cli = build_client();
 
     let resp = cli
         .post("/")
@@ -60,7 +55,7 @@ pub async fn test_organization_query() -> Result<()> {
             .into_connection(),
     );
 
-    let schema = build_schema(db).await?;
+    let schema = build_schema(db);
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);
@@ -90,7 +85,7 @@ pub async fn test_organization_query() -> Result<()> {
 
 #[tokio::test]
 pub async fn test_organization_mutation() -> Result<()> {
-    let cli = build_client().await?;
+    let cli = build_client();
 
     let mutation = cli
         .post("/")
@@ -122,7 +117,7 @@ pub async fn test_project_query() -> Result<()> {
             .into_connection(),
     );
 
-    let schema = build_schema(db).await?;
+    let schema = build_schema(db);
 
     let app = Route::new().at("/", graphql_handler).data(schema);
     let cli = poem::test::TestClient::new(app);

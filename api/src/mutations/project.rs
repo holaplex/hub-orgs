@@ -2,11 +2,10 @@ use std::sync::Arc;
 
 use async_graphql::{self, Context, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
-use uuid::Uuid;
 
 use crate::entities::{projects, projects::ActiveModel};
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Mutation;
 
 #[Object(name = "ProjectMutation")]
@@ -29,7 +28,7 @@ impl Mutation {
     }
 }
 
-#[derive(InputObject)]
+#[derive(Debug, InputObject)]
 pub struct CreateProjectInput {
     pub organization: Uuid,
     pub name: String,

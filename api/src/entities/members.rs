@@ -3,7 +3,7 @@
 use async_graphql::*;
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
+#[derive(Clone, Copy, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
 #[sea_orm(table_name = "members")]
 #[graphql(concrete(name = "Member", params()))]
 pub struct Model {

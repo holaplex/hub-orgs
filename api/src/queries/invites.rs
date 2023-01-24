@@ -4,7 +4,7 @@ use async_graphql::{self, Context, Object, Result};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
 
 use crate::entities::{invites, sea_orm_active_enums::InviteStatus};
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Query;
 
 #[Object(name = "InvitesQuery")]

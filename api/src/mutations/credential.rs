@@ -1,8 +1,8 @@
 use std::sync::Arc;
 
 use async_graphql::{self, Context, Error, InputObject, Object, Result, SimpleObject};
+use hub_core::reqwest::StatusCode;
 use ory_openapi_generated_client::models::OAuth2Client;
-use reqwest::StatusCode;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
@@ -11,7 +11,7 @@ use crate::{
     UserID,
 };
 
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Mutation;
 
 #[Object(name = "CredentialMutation")]
@@ -42,9 +42,7 @@ impl Mutation {
         };
 
         // create oauth_2 using ory client
-        let create_oauth2 = ory.post("/clients", request_payload).await?;
-        // deserialize ory response
-        let ory_response: OAuth2Client = serde_json::from_slice(&create_oauth2)?;
+        let ory_response: OAuth2Client = ory.post("/clients", request_payload).await?;
 
         let client_id = ory_response
             .client_id

@@ -6,7 +6,7 @@ use sea_orm::entity::prelude::*;
 use super::projects::Model as Project;
 use crate::ProjectLoader;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
+#[derive(Clone, Copy, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
 #[sea_orm(table_name = "project_credentials")]
 #[graphql(complex, concrete(name = "ProjectCredential", params()))]
 pub struct Model {

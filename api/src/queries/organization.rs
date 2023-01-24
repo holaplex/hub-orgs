@@ -4,7 +4,7 @@ use async_graphql::{self, Context, Object, Result};
 use sea_orm::{prelude::*, QueryOrder};
 
 use crate::entities::organizations;
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct Query;
 
 #[Object(name = "OrganizationQuery")]
@@ -29,7 +29,7 @@ impl Query {
     async fn organization(
         &self,
         ctx: &Context<'_>,
-        id: uuid::Uuid,
+        id: Uuid,
     ) -> Result<Option<organizations::Model>> {
         let db = ctx.data::<DatabaseConnection>()?;
 

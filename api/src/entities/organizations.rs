@@ -14,7 +14,7 @@ use crate::dataloaders::{
 #[graphql(complex, concrete(name = "Organization", params()))]
 pub struct Model {
     #[sea_orm(primary_key, column_type = "Uuid")]
-    pub id: uuid::Uuid,
+    pub id: Uuid,
     #[sea_orm(column_type = "Text")]
     pub name: String,
     pub created_at: DateTime,
