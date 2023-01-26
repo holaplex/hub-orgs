@@ -23,7 +23,7 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            toolchain: nightly-2022-12-11
             override: true
             components: rustfmt, clippy
       - uses: actions/cache@v3
@@ -65,7 +65,7 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            toolchain: nightly-2022-12-11
             override: true
             components: rustfmt, clippy
       - name: cargo fmt
