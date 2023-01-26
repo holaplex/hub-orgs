@@ -17,6 +17,10 @@ categories = ["cryptography::cryptocurrencies", "web-programming"]
 name = "migration"
 path = "src/lib.rs"
 
+[[bin]]
+name = "migration"
+
+
 [dependencies]
 tokio = { version = "1.22.0", features = ["macros"] }
 

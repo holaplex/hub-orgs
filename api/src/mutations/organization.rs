@@ -1,14 +1,12 @@
-use std::sync::Arc;
-
-use async_graphql::{self, Context, InputObject, Object, Result};
+use async_graphql::{self, Context, Error, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
 
 use crate::{
     entities::{organizations, organizations::ActiveModel, owners},
-    UserID,
+    AppContext, UserID,
 };
 
-#[derive(Debug, Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Mutation;
 
 #[Object(name = "OrganizationMutation")]
@@ -22,12 +20,13 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateOrganizationInput,
     ) -> Result<organizations::Model> {
-        let UserID(id) = ctx.data::<UserID>()?;
-        let db = &**ctx.data::<Arc<DatabaseConnection>>()?;
+        let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
+        let UserID(id) = user_id;
+        let conn = db.get();
 
-        let user_id = id.ok_or_else(|| "no user id")?;
+        let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
-        let org = ActiveModel::from(input).insert(db).await?;
+        let org = ActiveModel::from(input).insert(conn).await?;
 
         let owner = owners::ActiveModel {
             user_id: Set(user_id),
@@ -35,7 +34,7 @@ impl Mutation {
             ..Default::default()
         };
 
-        owner.insert(db).await?;
+        owner.insert(conn).await?;
 
         Ok(org)
     }

@@ -1,4 +1,5 @@
 use hub_core::{
+    anyhow::Result,
     clap,
     prelude::*,
     reqwest,
@@ -15,6 +16,7 @@ pub struct OryArgs {
     ory_auth_token: String,
 }
 
+#[derive(Clone, Debug)]
 pub struct OryClient {
     pub client: reqwest::Client,
     pub base_url: String,
@@ -22,7 +24,8 @@ pub struct OryClient {
 }
 
 impl OryClient {
-    pub(crate) fn new(args: OryArgs) -> Self {
+    #[must_use]
+    pub fn new(args: OryArgs) -> Self {
         let OryArgs {
             ory_base_url,
             ory_auth_token,
@@ -35,6 +38,10 @@ impl OryClient {
         }
     }
 
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if response is an error
     pub async fn post<D: serde::de::DeserializeOwned>(
         &self,
         endpoint: &str,
@@ -54,6 +61,10 @@ impl OryClient {
             .context("failed to parse response to bytes")
     }
 
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if response is an error
     pub async fn delete(&self, endpoint: &str) -> Result<Response> {
         let url = Url::parse(&format!("{}/admin", self.base_url))?.join(endpoint)?;
 

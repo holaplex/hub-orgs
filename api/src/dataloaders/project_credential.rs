@@ -1,17 +1,22 @@
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 use async_graphql::{dataloader::Loader as DataLoader, FieldError, Result};
 use poem::async_trait;
 use sea_orm::prelude::*;
 
-use crate::entities::project_credentials::{Column, Entity, Model as ProjectCredential};
+use crate::{
+    db::Connection,
+    entities::project_credentials::{Column, Entity, Model as ProjectCredential},
+};
+
+#[derive(Debug, Clone)]
 pub struct Loader {
-    pub db: Arc<DatabaseConnection>,
+    pub db: Connection,
 }
 
 impl Loader {
     #[must_use]
-    pub fn new(db: Arc<DatabaseConnection>) -> Self {
+    pub fn new(db: Connection) -> Self {
         Self { db }
     }
 }
@@ -27,7 +32,7 @@ impl DataLoader<Uuid> for Loader {
     ) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
         let project_credentials = Entity::find()
             .filter(Column::CredentialId.is_in(credential_ids.iter().map(ToOwned::to_owned)))
-            .all(&*self.db)
+            .all(self.db.get())
             .await?;
 
         let mut hashmap = HashMap::new();

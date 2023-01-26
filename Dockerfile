@@ -29,7 +29,7 @@ COPY api api
 COPY migration migration
 
 FROM builder AS builder-hub-orgs
-RUN cargo build --release --bin hub-orgs
+RUN cargo build --release --bin holaplex-hub-orgs
 
 FROM builder AS builder-migration
 RUN cargo build --release --bin migration
@@ -47,8 +47,8 @@ RUN apt-get update -y && \
 RUN mkdir -p bin
 
 FROM base AS hub-orgs
-COPY --from=builder-hub-orgs /app/target/release/hub-orgs bin/
-CMD ["bin/hub-orgs"]
+COPY --from=builder-hub-orgs /app/target/release/holaplex-hub-orgs bin
+CMD ["bin/holaplex-hub-orgs"]
 
 FROM base AS migrator
 COPY --from=builder-migration /app/target/release/migration bin/
