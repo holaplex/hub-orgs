@@ -28,7 +28,7 @@ jobs:
           file: ./Dockerfile
           target: hub-orgs
           push: true
-	  no-cache: true
+	        no-cache: true
           tags: ${{ vars.DOCKERHUB_ORG }}/hub-orgs:${{ github.sha }},${{ vars.DOCKERHUB_ORG }}/hub-orgs:latest
       -
         name: Build and push hub-orgs-migrations
