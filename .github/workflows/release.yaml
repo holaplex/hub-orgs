@@ -32,8 +32,7 @@ jobs:
           push: true
           tags: ${{ vars.DOCKERHUB_ORG }}/hub-orgs:${{ github.sha }},${{ vars.DOCKERHUB_ORG }}/hub-orgs:latest
           platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
       -
         name: Build and push hub-orgs-migrations
         uses: docker/build-push-action@v3
@@ -44,5 +43,4 @@ jobs:
           push: true
           tags: ${{ vars.DOCKERHUB_ORG }}/hub-orgs-migrations:${{ github.sha }},${{ vars.DOCKERHUB_ORG }}/hub-orgs-migrations:latest
           platforms: linux/amd64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
