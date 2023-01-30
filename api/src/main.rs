@@ -1,6 +1,7 @@
 //!
 
 use holaplex_hub_orgs::{
+    api::OrgsApi,
     build_schema,
     db::Connection,
     handlers::{graphql_handler, health, playground},
@@ -9,6 +10,9 @@ use holaplex_hub_orgs::{
 };
 use hub_core::anyhow::Context as AnyhowContext;
 use poem::{get, listener::TcpListener, middleware::AddData, post, EndpointExt, Route, Server};
+use poem_openapi::{
+    param::Path, payload::Json, ApiResponse, Object, OpenApi, OpenApiService, Tags,
+};
 
 pub fn main() {
     let opts = hub_core::StartConfig {
@@ -34,11 +38,17 @@ pub fn main() {
 
             let state = AppState::new(schema, connection, ory_client, svix_client);
 
+            let api_service = OpenApiService::new(OrgsApi, "Orgs", "0.1.0")
+                .server(format!("http://localhost:{port}/api"));
+            let ui = api_service.swagger_ui();
+            let spec = api_service.spec_endpoint();
+
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
                     Route::new()
-                        .at("/graphql", post(graphql_handler).with(AddData::new(state)))
-                        .at("/playground", get(playground))
+                        .nest("/api", api_service.with(AddData::new(state)))
+                        .nest("/", ui)
+                        .at("/spec", spec)
                         .at("/health", get(health)),
                 )
                 .await
