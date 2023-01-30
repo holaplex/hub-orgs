@@ -23,7 +23,7 @@ impl Mutation {
     ) -> Result<organizations::Model> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
         let UserID(id) = user_id;
-       
+
         let svix = ctx.data::<Svix>()?;
 
         let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;

@@ -39,6 +39,6 @@ branch = "stable"
 features = ["kafka"]
 
 [dependencies.svix]
-git = "https://github.com/imabdulbasit/svix-webhooks"
+git = "https://github.com/holaplex/svix-webhooks"
 version = "0.74.1"
 branch = "rust-client"

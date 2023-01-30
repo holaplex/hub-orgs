@@ -34,7 +34,7 @@ use poem::{async_trait, FromRequest, Request, RequestBody};
 use queries::Query;
 use svix::api::Svix;
 
-use crate::{ory_client::OryClient};
+use crate::ory_client::OryClient;
 
 pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
 

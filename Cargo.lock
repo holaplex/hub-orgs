@@ -3061,7 +3061,7 @@ checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 [[package]]
 name = "svix"
 version = "0.74.1"
-source = "git+https://github.com/imabdulbasit/svix-webhooks?branch=rust-client#330f8a4be1206649b75f3e7209ec164af98b7c5a"
+source = "git+https://github.com/holaplex/svix-webhooks?branch=rust-client#330f8a4be1206649b75f3e7209ec164af98b7c5a"
 dependencies = [
  "base64 0.13.1",
  "hmac-sha256",
