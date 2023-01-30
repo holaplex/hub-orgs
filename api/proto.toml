@@ -1,0 +1,5 @@
+[registry]
+endpoint = "http://localhost:8081/"
+
+[schemas]
+organization = 1

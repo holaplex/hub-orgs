@@ -1,8 +1,11 @@
 use async_graphql::{self, Context, InputObject, Object, Result};
+use hub_core::{producer::Producer, serde_with::rust::unwrap_or_skip};
 use sea_orm::{prelude::*, Set};
 
 use crate::{
+    dataloaders::organization,
     entities::{projects, projects::ActiveModel},
+    proto::{event::EventPayload, Event, Key, Organization, Project},
     AppContext,
 };
 
@@ -21,11 +24,21 @@ impl Mutation {
         input: CreateProjectInput,
     ) -> Result<projects::Model> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
+        let producer = ctx.data::<Producer<Event>>()?;
 
-        ActiveModel::from(input)
-            .insert(db.get())
-            .await
-            .map_err(Into::into)
+        let model = ActiveModel::from(input).insert(db.get()).await?;
+
+        let event = Event {
+            event_payload: Some(EventPayload::ProjectCreated(model.clone().into())),
+        };
+
+        let key = Key {
+            id: model.id.to_string(),
+        };
+
+        producer.send(Some(&event), Some(&key)).await?;
+
+        Ok(model)
     }
 }
 
@@ -41,6 +54,26 @@ impl From<CreateProjectInput> for ActiveModel {
             organization_id: Set(val.organization),
             name: Set(val.name),
             ..Default::default()
+        }
+    }
+}
+
+impl From<projects::Model> for Project {
+    fn from(
+        projects::Model {
+            id,
+            name,
+            organization_id,
+            created_at,
+            deactivated_at,
+        }: projects::Model,
+    ) -> Self {
+        Self {
+            id: id.to_string(),
+            name,
+            organization_id: organization_id.to_string(),
+            created_at: created_at.to_string(),
+            deactivated_at: deactivated_at.unwrap_or_default().to_string(),
         }
     }
 }

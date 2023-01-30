@@ -10,7 +10,6 @@ pub mod handlers;
 pub mod mutations;
 pub mod ory_client;
 pub mod queries;
-
 use async_graphql::{
     dataloader::DataLoader,
     extensions::{ApolloTracing, Logger},
@@ -25,6 +24,7 @@ use hub_core::{
     anyhow::{Error, Result},
     clap,
     prelude::*,
+    producer::Producer,
     tokio,
     uuid::Uuid,
 };
@@ -33,6 +33,16 @@ use poem::{async_trait, FromRequest, Request, RequestBody};
 use queries::Query;
 
 use crate::ory_client::OryClient;
+
+pub mod proto {
+    include!(concat!(env!("OUT_DIR"), "/event.proto.rs"));
+}
+
+use proto::{Event, Key, Organization, Project};
+
+impl hub_core::producer::Message for proto::Event {
+    type Key = proto::Key;
+}
 
 pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
 
@@ -80,15 +90,22 @@ pub struct AppState {
     pub schema: AppSchema,
     pub connection: Connection,
     pub ory_client: OryClient,
+    pub producer: Producer<Event>,
 }
 
 impl AppState {
     #[must_use]
-    pub fn new(schema: AppSchema, connection: Connection, ory_client: OryClient) -> Self {
+    pub fn new(
+        schema: AppSchema,
+        connection: Connection,
+        ory_client: OryClient,
+        producer: Producer<Event>,
+    ) -> Self {
         Self {
             schema,
             connection,
             ory_client,
+            producer,
         }
     }
 }

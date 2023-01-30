@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+
+package event.proto;
+
+// import "google/protobuf/timestamp.proto";
+
+
+message Project {
+  string id = 1;
+  string name = 2;
+  string organization_id = 3;
+  string created_at = 4;
+  string deactivated_at = 5;
+  // google.protobuf.Timestamp created_at = 4;
+  // google.protobuf.Timestamp deactivated_at = 5;
+}
+
+message Organization {
+  string id = 1;
+  string name = 2;
+  string created_at = 3;
+  string deactivated_at = 4;
+  // google.protobuf.Timestamp created_at = 3;
+  // google.protobuf.Timestamp deactivated_at = 4;
+}
+
+message Key {
+  string id = 1;
+}
+
+message Event {
+  oneof event_payload {
+    Project project_created = 2;
+    Project project_deactivated = 3;
+    Organization organization_created = 4;
+  }
+}

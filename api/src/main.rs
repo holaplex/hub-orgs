@@ -5,7 +5,7 @@ use holaplex_hub_orgs::{
     db::Connection,
     handlers::{graphql_handler, health, playground},
     ory_client::OryClient,
-    AppState, Args,
+    proto, AppState, Args,
 };
 use hub_core::anyhow::Context as AnyhowContext;
 use poem::{get, listener::TcpListener, middleware::AddData, post, EndpointExt, Route, Server};
@@ -26,7 +26,9 @@ pub fn main() {
             let schema = build_schema();
             let ory_client = OryClient::new(ory);
 
-            let state = AppState::new(schema, connection, ory_client);
+            let producer = common.producer_cfg.build::<proto::Event>().await?;
+
+            let state = AppState::new(schema, connection, ory_client, producer);
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
