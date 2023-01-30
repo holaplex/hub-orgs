@@ -6,7 +6,7 @@ use crate::{
     entities::{
         organizations,
         webhook_projects::ActiveModel as WebhookProjectActiveModel,
-        webhooks::{ActiveModel as WebhookActiveModel, Model as Webhook},
+        webhooks::{self, ActiveModel as WebhookActiveModel, Model as Webhook},
     },
     AppContext, UserID,
 };
@@ -96,6 +96,50 @@ impl Mutation {
             Err(Error::new("Organization not found in database"))
         }
     }
+
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
+    pub async fn delete_webhook(
+        &self,
+        ctx: &Context<'_>,
+        input: CreateWebhookInput,
+    ) -> Result<DeleteWebhookPayload> {
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
+
+        let svix = ctx.data::<Svix>()?;
+
+        if let Some(org) = organizations::Entity::find_by_id(input.organization)
+            .one(db.get())
+            .await?
+        {
+            svix.endpoint()
+                .delete(org.svix_app_id.clone(), input.endpoint.clone())
+                .await?;
+
+            let res = webhooks::Entity::delete_many()
+                .filter(
+                    webhooks::Column::EndpointId
+                        .eq(input.endpoint.clone())
+                        .and(webhooks::Column::OrganizationId.eq(input.organization)),
+                )
+                .exec(db.get())
+                .await?;
+
+            if res.rows_affected != 1 {
+                return Err(Error::new(format!("Rows affected: {}", res.rows_affected)));
+            }
+
+            Ok(DeleteWebhookPayload {
+                app_id: org.svix_app_id,
+                endpoint: input.endpoint,
+                organization_id: input.organization,
+            })
+        } else {
+            Err(Error::new("Organization not found in database"))
+        }
+    }
 }
 
 #[derive(InputObject, Clone)]
@@ -135,4 +179,17 @@ impl FilterType {
             Self::CredentialDeleted => "credential.deleted".to_string(),
         }
     }
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub struct DeleteWebhookInput {
+    pub endpoint: String,
+    pub organization: Uuid,
+}
+
+#[derive(Debug, Clone, SimpleObject)]
+pub struct DeleteWebhookPayload {
+    app_id: String,
+    organization_id: Uuid,
+    endpoint: String,
 }
