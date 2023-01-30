@@ -1,21 +1,59 @@
 use async_graphql::{Context, Object, Result, Union};
 use sea_orm::{prelude::*, QueryOrder, QuerySelect};
-use uuid::Uuid;
 
 use crate::{
-    db::DatabaseClient,
     entities::{members, owners},
+    AppContext,
 };
 
 #[derive(Union)]
 enum Affiliation {
-    Owner(owners::Model),
-    Member(members::Model),
+    Owner(owners::Owner),
+    Member(members::Member),
 }
 
 /// a hub user
+#[derive(Debug, Clone, Copy)]
 pub struct User {
     pub id: Uuid,
+}
+
+impl From<owners::Model> for Affiliation {
+    fn from(
+        owners::Model {
+            id,
+            user_id,
+            organization_id,
+            created_at,
+        }: owners::Model,
+    ) -> Self {
+        Self::Owner(owners::Owner {
+            id,
+            user_id,
+            organization_id,
+            created_at,
+        })
+    }
+}
+
+impl From<members::Model> for Affiliation {
+    fn from(
+        members::Model {
+            id,
+            user_id,
+            organization_id,
+            created_at,
+            revoked_at,
+        }: members::Model,
+    ) -> Self {
+        Self::Member(members::Member {
+            id,
+            user_id,
+            organization_id,
+            created_at,
+            revoked_at,
+        })
+    }
 }
 
 #[Object]
@@ -30,15 +68,16 @@ impl User {
         #[graphql(default = 25)] limit: u64,
         #[graphql(default = 0)] offset: u64,
     ) -> Result<Vec<Affiliation>> {
-        let db = &**ctx.data::<DatabaseClient>()?;
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
         let user_id = self.id;
+        let conn = db.get();
 
         let org_owners = owners::Entity::find()
             .filter(owners::Column::UserId.eq(user_id))
             .order_by_desc(owners::Column::CreatedAt)
             .limit(limit)
             .offset(offset)
-            .all(db)
+            .all(conn)
             .await?;
 
         let org_members = members::Entity::find()
@@ -50,7 +89,7 @@ impl User {
             .order_by_desc(owners::Column::CreatedAt)
             .limit(limit)
             .offset(offset)
-            .all(db)
+            .all(conn)
             .await?;
 
         Ok(org_owners
@@ -61,7 +100,7 @@ impl User {
     }
 }
 
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Query;
 
 #[Object(name = "UserQuery")]

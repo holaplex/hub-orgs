@@ -1,10 +1,9 @@
 use async_graphql::{self, Context, Error, Object, Result, SimpleObject, Value};
+use hub_core::serde_json;
 use sea_orm::prelude::*;
-use webhooks::api::EventTypeOut;
+use svix::api::{EventTypeOut, Svix};
 
-use crate::svix_client::SvixClient;
-
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Query;
 
 #[Object(name = "WebhookQuery")]
@@ -14,7 +13,7 @@ impl Query {
     /// # Errors
     /// This function fails if ...
     async fn event_types(&self, ctx: &Context<'_>) -> Result<Vec<EventType>> {
-        let svix = &**ctx.data::<SvixClient>()?;
+        let svix = ctx.data::<Svix>()?;
 
         let event_types = svix.event_type().list(None).await?;
 

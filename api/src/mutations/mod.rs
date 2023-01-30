@@ -6,7 +6,7 @@ pub mod webhook;
 
 // Add your other ones here to create a unified Mutation object
 // e.x. Mutation(OrganizationMutation, OtherMutation, OtherOtherMutation)
-#[derive(async_graphql::MergedObject, Default)]
+#[derive(Debug, async_graphql::MergedObject, Default)]
 pub struct Mutation(
     organization::Mutation,
     project::Mutation,

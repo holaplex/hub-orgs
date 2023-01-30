@@ -3,7 +3,7 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::projects::Model as Project;
-use crate::WebhookProjectsLoader;
+use crate::dataloaders::WebhookProjectsLoader;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize, SimpleObject)]
 #[sea_orm(table_name = "webhooks")]

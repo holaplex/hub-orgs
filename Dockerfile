@@ -1,6 +1,18 @@
 FROM lukemathwalker/cargo-chef:0.1.50-rust-buster AS chef
 WORKDIR /app
 
+RUN apt-get update -y && \
+  apt-get install -y --no-install-recommends \
+    cmake \
+    g++ \
+    libsasl2-dev \
+    libssl-dev \
+    libudev-dev \
+    pkg-config \
+    protobuf-compiler \
+  && \
+  rm -rf /var/lib/apt/lists/*
+
 FROM chef AS planner
 COPY Cargo.* ./
 COPY api api
@@ -17,7 +29,7 @@ COPY api api
 COPY migration migration
 
 FROM builder AS builder-hub-orgs
-RUN cargo build --release --bin hub-orgs
+RUN cargo build --release --bin holaplex-hub-orgs
 
 FROM builder AS builder-migration
 RUN cargo build --release --bin migration
@@ -25,7 +37,7 @@ RUN cargo build --release --bin migration
 FROM debian:bullseye-slim as base
 WORKDIR /app
 RUN apt-get update -y && \
-  apt-get install -y \
+  apt-get install -y --no-install-recommends \
     ca-certificates \
     libpq5 \
     libssl1.1 \
@@ -35,8 +47,8 @@ RUN apt-get update -y && \
 RUN mkdir -p bin
 
 FROM base AS hub-orgs
-COPY --from=builder-hub-orgs /app/target/release/hub-orgs bin/
-CMD ["bin/hub-orgs"]
+COPY --from=builder-hub-orgs /app/target/release/holaplex-hub-orgs bin
+CMD ["bin/holaplex-hub-orgs"]
 
 FROM base AS migrator
 COPY --from=builder-migration /app/target/release/migration bin/

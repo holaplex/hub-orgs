@@ -1,8 +1,9 @@
 use async_graphql::{self, Context, Object, Result};
 use sea_orm::{prelude::*, QueryOrder};
 
-use crate::{db::DatabaseClient, entities::organizations};
-#[derive(Default)]
+use crate::{entities::organizations, AppContext};
+
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Query;
 
 #[Object(name = "OrganizationQuery")]
@@ -12,11 +13,11 @@ impl Query {
     /// # Errors
     /// This function fails if ...
     async fn organizations(&self, ctx: &Context<'_>) -> Result<Vec<organizations::Model>> {
-        let db = &**ctx.data::<DatabaseClient>()?;
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
 
         organizations::Entity::find()
             .order_by_desc(organizations::Column::CreatedAt)
-            .all(db)
+            .all(db.get())
             .await
             .map_err(Into::into)
     }
@@ -27,12 +28,12 @@ impl Query {
     async fn organization(
         &self,
         ctx: &Context<'_>,
-        id: uuid::Uuid,
+        id: Uuid,
     ) -> Result<Option<organizations::Model>> {
-        let db = ctx.data::<DatabaseConnection>()?;
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
 
         organizations::Entity::find_by_id(id)
-            .one(db)
+            .one(db.get())
             .await
             .map_err(Into::into)
     }

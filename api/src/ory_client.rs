@@ -1,34 +1,38 @@
-use bytes::Bytes;
-use clap::Parser;
-use reqwest::{Client as ReqwestClient, Response, Url};
+use hub_core::{
+    anyhow::Result,
+    clap,
+    prelude::*,
+    reqwest,
+    reqwest::{Response, Url},
+};
 use serde::Serialize;
 
-use crate::prelude::*;
-
 /// Arguments for establishing a database connection
-#[derive(Debug, Parser)]
-pub struct Args {
+#[derive(Debug, clap::Args)]
+pub struct OryArgs {
     #[arg(long, env, default_value = "http://127.0.0.1:4445")]
     ory_base_url: String,
     #[arg(long, env, default_value = "")]
     ory_auth_token: String,
 }
 
+#[derive(Clone, Debug)]
 pub struct OryClient {
-    pub client: ReqwestClient,
+    pub client: reqwest::Client,
     pub base_url: String,
     pub auth_token: String,
 }
 
 impl OryClient {
-    pub(crate) fn new() -> Self {
-        let Args {
+    #[must_use]
+    pub fn new(args: OryArgs) -> Self {
+        let OryArgs {
             ory_base_url,
             ory_auth_token,
-        } = Args::parse();
+        } = args;
 
         Self {
-            client: ReqwestClient::new(),
+            client: reqwest::Client::new(),
             base_url: ory_base_url,
             auth_token: ory_auth_token,
         }
@@ -37,8 +41,12 @@ impl OryClient {
     /// Res
     ///
     /// # Errors
-    /// This function fails if ...
-    pub async fn post(&self, endpoint: &str, body: impl Serialize) -> Result<Bytes> {
+    /// This function fails if response is an error
+    pub async fn post<D: serde::de::DeserializeOwned>(
+        &self,
+        endpoint: &str,
+        body: impl Serialize,
+    ) -> Result<D> {
         let url = Url::parse(&format!("{}/admin", self.base_url))?.join(endpoint)?;
 
         self.client
@@ -48,7 +56,7 @@ impl OryClient {
             .send()
             .await
             .context("failed to make post request to ory client")?
-            .bytes()
+            .json()
             .await
             .context("failed to parse response to bytes")
     }
@@ -56,7 +64,7 @@ impl OryClient {
     /// Res
     ///
     /// # Errors
-    /// This function fails if ...
+    /// This function fails if response is an error
     pub async fn delete(&self, endpoint: &str) -> Result<Response> {
         let url = Url::parse(&format!("{}/admin", self.base_url))?.join(endpoint)?;
 

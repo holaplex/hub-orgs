@@ -3,15 +3,56 @@
 use async_graphql::*;
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
+use super::organizations::Model as Organization;
+use crate::AppContext;
+
+#[derive(Clone, Debug, Copy, PartialEq, DeriveEntityModel, Eq)]
 #[sea_orm(table_name = "owners")]
-#[graphql(concrete(name = "Owner", params()))]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     pub user_id: Uuid,
     pub organization_id: Uuid,
     pub created_at: DateTime,
+}
+
+#[derive(SimpleObject, Clone, Debug, Copy)]
+#[graphql(complex)]
+pub struct Owner {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub organization_id: Uuid,
+    pub created_at: DateTime,
+}
+
+#[ComplexObject]
+impl Owner {
+    async fn organization(&self, ctx: &Context<'_>) -> Result<Option<Organization>> {
+        let AppContext {
+            organization_loader,
+            ..
+        } = ctx.data::<AppContext>()?;
+
+        organization_loader.load_one(self.organization_id).await
+    }
+}
+
+impl From<Model> for Owner {
+    fn from(
+        Model {
+            id,
+            user_id,
+            organization_id,
+            created_at,
+        }: Model,
+    ) -> Self {
+        Self {
+            id,
+            user_id,
+            organization_id,
+            created_at,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

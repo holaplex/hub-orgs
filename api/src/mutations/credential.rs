@@ -1,16 +1,15 @@
 use async_graphql::{self, Context, Error, InputObject, Object, Result, SimpleObject};
+use hub_core::reqwest::StatusCode;
 use ory_openapi_generated_client::models::OAuth2Client;
-use reqwest::StatusCode;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
-    db::DatabaseClient,
     entities::{credentials, project_credentials},
     ory_client::OryClient,
-    UserID,
+    AppContext, UserID,
 };
 
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Mutation;
 
 #[Object(name = "CredentialMutation")]
@@ -24,9 +23,10 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateCredentialInput,
     ) -> Result<CreateCredentialPayload> {
-        let db = &**ctx.data::<DatabaseClient>()?;
+        let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
         let ory = ctx.data::<OryClient>()?;
-        let UserID(id) = ctx.data::<UserID>()?;
+        let UserID(id) = user_id;
+        let connection = db.get();
 
         let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
@@ -41,9 +41,7 @@ impl Mutation {
         };
 
         // create oauth_2 using ory client
-        let create_oauth2 = ory.post("/clients", request_payload).await?;
-        // deserialize ory response
-        let ory_response: OAuth2Client = serde_json::from_slice(&create_oauth2)?;
+        let ory_response: OAuth2Client = ory.post("/clients", request_payload).await?;
 
         let client_id = ory_response
             .client_id
@@ -61,7 +59,7 @@ impl Mutation {
             ..Default::default()
         };
 
-        let credential_model = credential.insert(db).await?;
+        let credential_model = credential.insert(connection).await?;
 
         // insert project credentials
         for project in input.projects {
@@ -72,7 +70,7 @@ impl Mutation {
                 ..Default::default()
             };
 
-            project_credentials.insert(db).await?;
+            project_credentials.insert(connection).await?;
         }
 
         // graphql response
@@ -95,11 +93,12 @@ impl Mutation {
         ctx: &Context<'_>,
         id: Uuid,
     ) -> Result<DeleteCredentialPayload> {
-        let db = &**ctx.data::<DatabaseClient>()?;
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
         let ory = ctx.data::<OryClient>()?;
+        let conn = db.get();
 
         let credential = credentials::Entity::find_by_id(id)
-            .one(db)
+            .one(conn)
             .await?
             .ok_or_else(|| Error::new("Credential not found in db"))?;
 
@@ -114,13 +113,13 @@ impl Mutation {
             return Err(Error::new(response_text));
         }
 
-        credential.delete(db).await?;
+        credential.delete(conn).await?;
 
         Ok(DeleteCredentialPayload { credential: id })
     }
 }
 
-#[derive(InputObject, Clone)]
+#[derive(InputObject, Clone, Debug)]
 pub struct CreateCredentialInput {
     pub organization: Uuid,
     pub name: String,

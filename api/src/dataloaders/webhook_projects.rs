@@ -5,7 +5,7 @@ use poem::async_trait;
 use sea_orm::{prelude::*, JoinType, QuerySelect};
 
 use crate::{
-    db::DatabaseClient,
+    db::Connection,
     entities::{
         projects::{self, Model as Project},
         webhook_projects::{self, Model as WebhookProject},
@@ -13,12 +13,12 @@ use crate::{
 };
 
 pub struct Loader {
-    pub db: DatabaseClient,
+    pub db: Connection,
 }
 
 impl Loader {
     #[must_use]
-    pub fn new(db: DatabaseClient) -> Self {
+    pub fn new(db: Connection) -> Self {
         Self { db }
     }
 }
@@ -39,7 +39,7 @@ impl DataLoader<Uuid> for Loader {
                 webhook_projects::Column::WebhookId
                     .is_in(webhook_ids.iter().map(ToOwned::to_owned)),
             )
-            .all(&*self.db)
+            .all(self.db.get())
             .await?;
 
         Ok(projects

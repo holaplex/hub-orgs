@@ -1,19 +1,17 @@
 use async_graphql::{self, Context, Enum, Error, InputObject, Object, Result, SimpleObject};
 use sea_orm::{prelude::*, Set};
-use webhooks::api::EndpointIn;
+use svix::api::{EndpointIn, Svix};
 
 use crate::{
-    db::DatabaseClient,
     entities::{
         organizations,
         webhook_projects::ActiveModel as WebhookProjectActiveModel,
         webhooks::{ActiveModel as WebhookActiveModel, Model as Webhook},
     },
-    svix_client::SvixClient,
-    UserID,
+    AppContext, UserID,
 };
 
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Mutation;
 
 #[Object(name = "WebhookMutation")]
@@ -27,14 +25,15 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateWebhookInput,
     ) -> Result<CreateWebhookPayload> {
-        let db = &**ctx.data::<DatabaseClient>()?;
-        let svix = &**ctx.data::<SvixClient>()?;
-        let UserID(id) = ctx.data::<UserID>()?;
+        let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
+        let UserID(id) = user_id;
+        let svix = ctx.data::<Svix>()?;
+
         let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
         // Find organization from database to get the svix app id
         if let Some(org) = organizations::Entity::find_by_id(input.organization)
-            .one(db)
+            .one(db.get())
             .await?
         {
             let app_id = org.svix_app_id;
@@ -73,7 +72,7 @@ impl Mutation {
                 ..Default::default()
             };
 
-            let webhook = webhook_active_model.insert(db).await?;
+            let webhook = webhook_active_model.insert(db.get()).await?;
 
             // insert all the webhook projects
             for project in &input.projects {
@@ -83,7 +82,7 @@ impl Mutation {
                     ..Default::default()
                 };
 
-                webhook_project_active_model.insert(db).await?;
+                webhook_project_active_model.insert(db.get()).await?;
             }
 
             // return the webhook object and endpoint secret

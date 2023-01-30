@@ -1,15 +1,13 @@
-use async_graphql::{self, Context, InputObject, Object, Result};
+use async_graphql::{self, Context, Error, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
-use webhooks::api::ApplicationIn;
+use svix::api::{ApplicationIn, Svix};
 
 use crate::{
-    db::DatabaseClient,
     entities::{organizations, organizations::ActiveModel, owners},
-    svix_client::SvixClient,
-    UserID,
+    AppContext, UserID,
 };
 
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct Mutation;
 
 #[Object(name = "OrganizationMutation")]
@@ -23,13 +21,14 @@ impl Mutation {
         ctx: &Context<'_>,
         input: CreateOrganizationInput,
     ) -> Result<organizations::Model> {
-        let UserID(id) = ctx.data::<UserID>()?;
-        let db = &**ctx.data::<DatabaseClient>()?;
-        let svix = &**ctx.data::<SvixClient>()?;
+        let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
+        let UserID(id) = user_id;
+       
+        let svix = ctx.data::<Svix>()?;
 
-        let user_id = id.ok_or_else(|| "no user id")?;
+        let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
-        let mut org_model = ActiveModel::from(input.clone()).insert(db).await?;
+        let mut org_model = ActiveModel::from(input.clone()).insert(db.get()).await?;
 
         match svix
             .application()
@@ -46,7 +45,7 @@ impl Mutation {
             Ok(res) => {
                 let mut org: ActiveModel = org_model.clone().into();
                 org.svix_app_id = Set(res.id);
-                org_model = org.update(db).await?;
+                org_model = org.update(db.get()).await?;
 
                 let owner = owners::ActiveModel {
                     user_id: Set(user_id),
@@ -54,10 +53,10 @@ impl Mutation {
                     ..Default::default()
                 };
 
-                owner.insert(db).await?;
+                owner.insert(db.get()).await?;
             },
             Err(err) => {
-                org_model.delete(db).await?;
+                org_model.delete(db.get()).await?;
                 return Err(err.into());
             },
         };
@@ -66,7 +65,7 @@ impl Mutation {
     }
 }
 
-#[derive(InputObject, Clone)]
+#[derive(Debug, InputObject, Clone)]
 pub struct CreateOrganizationInput {
     pub name: String,
 }

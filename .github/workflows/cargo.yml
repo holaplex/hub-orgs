@@ -7,11 +7,23 @@ jobs:
     name: clippy/check/doc
     runs-on: ubuntu-latest
     steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update -y && \
+          sudo apt-get install -y --no-install-recommends \
+            cmake \
+            g++ \
+            libsasl2-dev \
+            libssl-dev \
+            libudev-dev \
+            pkg-config \
+            protobuf-compiler
+
       - uses: actions/checkout@v3
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            toolchain: nightly-2022-12-11
             override: true
             components: rustfmt, clippy
       - uses: actions/cache@v3
@@ -22,7 +34,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'rust-toolchain.toml') }}-cf
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'rust-toolchain.toml') }}-v1
       - name: cargo clippy
         uses: actions-rs/cargo@v1
         with:
@@ -53,7 +65,7 @@ jobs:
       - name: Install latest nightly
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly
+            toolchain: nightly-2022-12-11
             override: true
             components: rustfmt, clippy
       - name: cargo fmt
