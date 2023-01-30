@@ -38,7 +38,7 @@ pub mod proto {
     include!(concat!(env!("OUT_DIR"), "/event.proto.rs"));
 }
 
-use proto::{Event, Key, Organization, Project};
+use proto::Event;
 
 impl hub_core::producer::Message for proto::Event {
     type Key = proto::Key;

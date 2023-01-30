@@ -1,11 +1,10 @@
 use async_graphql::{self, Context, InputObject, Object, Result};
-use hub_core::{producer::Producer, serde_with::rust::unwrap_or_skip};
+use hub_core::producer::Producer;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
-    dataloaders::organization,
     entities::{projects, projects::ActiveModel},
-    proto::{event::EventPayload, Event, Key, Organization, Project},
+    proto::{event::EventPayload, Event, Key, Project},
     AppContext,
 };
 
@@ -73,7 +72,7 @@ impl From<projects::Model> for Project {
             name,
             organization_id: organization_id.to_string(),
             created_at: created_at.to_string(),
-            deactivated_at: deactivated_at.unwrap_or_default().to_string(),
+            deactivated_at: deactivated_at.map(|d| d.to_string()).unwrap_or_default(),
         }
     }
 }
