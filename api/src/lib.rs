@@ -2,12 +2,12 @@
 #![warn(clippy::pedantic, clippy::cargo)]
 #![allow(clippy::module_name_repetitions)]
 
+pub mod api;
 pub mod dataloaders;
 pub mod db;
 #[allow(clippy::pedantic)]
 pub mod entities;
 pub mod handlers;
-pub mod api;
 pub mod mutations;
 pub mod ory_client;
 pub mod queries;

@@ -46,7 +46,7 @@ pub fn main() {
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
                     Route::new()
-                        .nest("/api", api_service.with(AddData::new(state)))
+                        .nest("/v1", api_service.with(AddData::new(state)))
                         .nest("/", ui)
                         .at("/spec", spec)
                         .at("/health", get(health)),

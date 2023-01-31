@@ -6,8 +6,9 @@ use sea_orm::entity::prelude::*;
 use super::organizations::Model as Organization;
 use crate::AppContext;
 
-#[derive(Clone, Copy, Debug, PartialEq, DeriveEntityModel, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, DeriveEntityModel, Eq, poem_openapi::Object)]
 #[sea_orm(table_name = "members")]
+#[oai(rename = "Member", read_only_all)]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,

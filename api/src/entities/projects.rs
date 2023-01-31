@@ -6,16 +6,21 @@ use sea_orm::entity::prelude::*;
 use super::organizations::Model as Organization;
 use crate::AppContext;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject, poem_openapi::Object)]
 #[sea_orm(table_name = "projects")]
 #[graphql(complex, concrete(name = "Project", params()))]
+#[oai(rename = "Project")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
+    #[oai(read_only)]
     pub id: Uuid,
+    #[sea_orm(column_type = "Text")]
     pub name: String,
     pub organization_id: Uuid,
+    #[oai(read_only)]
     pub created_at: DateTime,
     #[sea_orm(nullable)]
+    #[oai(read_only)]
     pub deactivated_at: Option<DateTime>,
 }
 
