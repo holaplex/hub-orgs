@@ -16,7 +16,12 @@ pub fn main() {
     };
 
     hub_core::run(opts, |common, args| {
-        let Args { port, db, ory } = args;
+        let Args {
+            port,
+            db,
+            ory,
+            svix,
+        } = args;
 
         common.rt.block_on(async move {
             let connection = Connection::new(db)
@@ -25,8 +30,9 @@ pub fn main() {
 
             let schema = build_schema();
             let ory_client = OryClient::new(ory);
+            let svix_client = svix.build_client();
 
-            let state = AppState::new(schema, connection, ory_client);
+            let state = AppState::new(schema, connection, ory_client, svix_client);
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(

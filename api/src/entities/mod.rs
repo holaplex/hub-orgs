@@ -8,3 +8,5 @@ pub mod owners;
 pub mod project_credentials;
 pub mod projects;
 pub mod sea_orm_active_enums;
+pub mod webhook_projects;
+pub mod webhooks;

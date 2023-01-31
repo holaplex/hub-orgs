@@ -50,6 +50,7 @@ impl Connection {
     }
 
     #[must_use]
+
     pub fn get(&self) -> &DatabaseConnection {
         &self.0
     }

@@ -10,6 +10,7 @@ pub mod handlers;
 pub mod mutations;
 pub mod ory_client;
 pub mod queries;
+pub mod svix_client;
 
 use async_graphql::{
     dataloader::DataLoader,
@@ -31,6 +32,7 @@ use hub_core::{
 use mutations::Mutation;
 use poem::{async_trait, FromRequest, Request, RequestBody};
 use queries::Query;
+use svix::api::Svix;
 
 use crate::ory_client::OryClient;
 
@@ -73,6 +75,9 @@ pub struct Args {
 
     #[command(flatten)]
     pub ory: ory_client::OryArgs,
+
+    #[command(flatten)]
+    pub svix: svix_client::SvixArgs,
 }
 
 #[derive(Clone)]
@@ -80,15 +85,22 @@ pub struct AppState {
     pub schema: AppSchema,
     pub connection: Connection,
     pub ory_client: OryClient,
+    pub svix_client: Svix,
 }
 
 impl AppState {
     #[must_use]
-    pub fn new(schema: AppSchema, connection: Connection, ory_client: OryClient) -> Self {
+    pub fn new(
+        schema: AppSchema,
+        connection: Connection,
+        ory_client: OryClient,
+        svix_client: Svix,
+    ) -> Self {
         Self {
             schema,
             connection,
             ory_client,
+            svix_client,
         }
     }
 }

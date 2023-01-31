@@ -59,7 +59,7 @@ services:
         source: ./hydra.yml
         target: /etc/config/hydra/hydra.yml
     environment:
-      - DSN=postgres://holaplex:holaplex@postgresd:5432/hydra?sslmode=disable&max_conns=100&max_idle_conns=10
+      - DSN=postgres://holaplex:holaplex@postgresd:5432/hydra?sslmode=disable&max_conns=100&max_idle_conns=100
     restart: unless-stopped
     depends_on:
       - hydra-migrate
@@ -68,7 +68,7 @@ services:
   hydra-migrate:
     image: oryd/hydra:v2.0.3
     environment:
-      - DSN=postgres://holaplex:holaplex@postgresd:5432/hydra?sslmode=disable&max_conns=100&max_idle_conns=10
+      - DSN=postgres://holaplex:holaplex@postgresd:5432/hydra?sslmode=disable&max_conns=100&max_idle_conns=100
     command: migrate -c /etc/config/hydra/hydra.yml sql -e --yes
     env_file:
       - .env 
@@ -91,7 +91,7 @@ services:
       - "3010:3000"
     restart: unless-stopped
   postgresd:
-    image: postgres:11.8
+    image: postgres:15.1
     ports:
       - "5132:5432"
     environment:
@@ -100,9 +100,50 @@ services:
       - POSTGRES_DB=hydra
     networks:
       - hydra
+
+  #SVIX
+  backend:
+    image: svix/svix-server
+    environment:
+      WAIT_FOR: "true"  # We want to wait for the default services
+      SVIX_REDIS_DSN: "redis://redis:6379"
+      # SVIX_DB_DSN: "postgresql://holaplex:holaplex@pgbouncer/svix"
+      DATABASE_URL: "postgresql://holaplex:holaplex@svix-postgres:5432/svix?max_conns=500&max_idle_conns=100"
+      SVIX_JWT_SECRET: ${SVIX_JWT_SECRET}
+    ports:
+      - "8071:8071"
+    depends_on:
+    - svix-postgres
+    - redis
+    networks:
+      - svix
+
+  svix-postgres:
+    image: postgres:13.4
+    ports:
+      - "5232:5432"
+    volumes:
+      - "svix-postgres-data:/var/lib/postgresql/data/"
+    environment:
+      POSTGRES_USER: holaplex
+      POSTGRES_DB: svix
+      POSTGRES_PASSWORD: holaplex
+    networks:
+      - svix
+  redis:
+    image: "redis:7.0.8-alpine"
+    # Enable persistence
+    command: "--save 60 500 --appendonly yes --appendfsync everysec"
+    volumes:
+      - "svix-redis-data:/data"  
+    networks:
+      - svix
 networks:
+  svix:
   hydra:
 volumes:
   hub_orgs_db:
     driver: local
   hydra-sqlite:
+  svix-postgres-data:
+  svix-redis-data:

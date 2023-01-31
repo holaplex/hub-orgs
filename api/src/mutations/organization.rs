@@ -1,5 +1,6 @@
 use async_graphql::{self, Context, Error, InputObject, Object, Result};
 use sea_orm::{prelude::*, Set};
+use svix::api::{ApplicationIn, Svix};
 
 use crate::{
     entities::{organizations, organizations::ActiveModel, owners},
@@ -22,25 +23,49 @@ impl Mutation {
     ) -> Result<organizations::Model> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
         let UserID(id) = user_id;
-        let conn = db.get();
+
+        let svix = ctx.data::<Svix>()?;
 
         let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
-        let org = ActiveModel::from(input).insert(conn).await?;
+        let mut org_model = ActiveModel::from(input.clone()).insert(db.get()).await?;
 
-        let owner = owners::ActiveModel {
-            user_id: Set(user_id),
-            organization_id: Set(org.id),
-            ..Default::default()
+        match svix
+            .application()
+            .create(
+                ApplicationIn {
+                    name: input.name,
+                    rate_limit: None,
+                    uid: Some(org_model.id.to_string()),
+                },
+                None,
+            )
+            .await
+        {
+            Ok(res) => {
+                let mut org: ActiveModel = org_model.clone().into();
+                org.svix_app_id = Set(res.id);
+                org_model = org.update(db.get()).await?;
+
+                let owner = owners::ActiveModel {
+                    user_id: Set(user_id),
+                    organization_id: Set(org_model.id),
+                    ..Default::default()
+                };
+
+                owner.insert(db.get()).await?;
+            },
+            Err(err) => {
+                org_model.delete(db.get()).await?;
+                return Err(err.into());
+            },
         };
 
-        owner.insert(conn).await?;
-
-        Ok(org)
+        Ok(org_model)
     }
 }
 
-#[derive(Debug, InputObject)]
+#[derive(Debug, InputObject, Clone)]
 pub struct CreateOrganizationInput {
     pub name: String,
 }

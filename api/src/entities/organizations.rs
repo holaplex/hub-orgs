@@ -16,8 +16,8 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub name: String,
     pub created_at: DateTime,
-    #[sea_orm(nullable)]
     pub deactivated_at: Option<DateTime>,
+    pub svix_app_id: String,
 }
 
 #[ComplexObject]

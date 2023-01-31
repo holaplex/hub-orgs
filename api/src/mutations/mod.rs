@@ -2,6 +2,7 @@ pub mod credential;
 pub mod invite;
 pub mod organization;
 pub mod project;
+pub mod webhook;
 
 // Add your other ones here to create a unified Mutation object
 // e.x. Mutation(OrganizationMutation, OtherMutation, OtherOtherMutation)
@@ -11,4 +12,5 @@ pub struct Mutation(
     project::Mutation,
     invite::Mutation,
     credential::Mutation,
+    webhook::Mutation,
 );
