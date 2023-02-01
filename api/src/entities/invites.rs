@@ -6,17 +6,34 @@ use serde::{Deserialize, Serialize};
 
 use super::sea_orm_active_enums::InviteStatus;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject, Serialize, Deserialize)]
+#[derive(
+    Clone,
+    Debug,
+    PartialEq,
+    DeriveEntityModel,
+    Eq,
+    SimpleObject,
+    Serialize,
+    Deserialize,
+    poem_openapi::Object,
+)]
 #[sea_orm(table_name = "invites")]
 #[graphql(concrete(name = "Invite", params()))]
+#[oai(rename = "Invite")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
+    #[oai(read_only)]
     pub id: Uuid,
     pub email: String,
+    #[oai(read_only)]
     pub status: InviteStatus,
+    #[oai(read_only)]
     pub organization_id: Uuid,
+    #[oai(read_only)]
     pub created_by: Uuid,
+    #[oai(read_only)]
     pub created_at: DateTime,
+    #[oai(read_only)]
     pub updated_at: Option<DateTime>,
 }
 

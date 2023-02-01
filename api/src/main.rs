@@ -11,7 +11,7 @@ use holaplex_hub_orgs::{
 use hub_core::anyhow::Context as AnyhowContext;
 use poem::{get, listener::TcpListener, middleware::AddData, post, EndpointExt, Route, Server};
 use poem_openapi::{
-    param::Path, payload::Json, ApiResponse, Object, OpenApi, OpenApiService, Tags,
+    param::Path, payload::Json, ApiResponse, ExtraHeader, Object, OpenApi, OpenApiService, Tags,
 };
 
 pub fn main() {
@@ -39,6 +39,13 @@ pub fn main() {
             let state = AppState::new(schema, connection, ory_client, svix_client);
 
             let api_service = OpenApiService::new(OrgsApi, "Orgs", "0.1.0")
+                .extra_request_header(
+                    ExtraHeader::new<Uuid>("X-User-Id")
+                        .description("The user id of the current logged in user"),
+                )
+                .extra_request_header(
+                    ExtraHeader::new<UUid>("X-Organization-Id").description("The organization id"),
+                )
                 .server(format!("http://localhost:{port}/api"));
             let ui = api_service.swagger_ui();
             let spec = api_service.spec_endpoint();
@@ -46,7 +53,7 @@ pub fn main() {
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
                     Route::new()
-                        .nest("/v1", api_service.with(AddData::new(state)))
+                        .nest("/public/v1", api_service.with(AddData::new(state)))
                         .nest("/", ui)
                         .at("/spec", spec)
                         .at("/health", get(health)),

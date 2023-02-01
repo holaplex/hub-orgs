@@ -6,16 +6,22 @@ use sea_orm::entity::prelude::*;
 use super::{organizations::Model as Organization, projects::Model as Project};
 use crate::{dataloaders::project::CredentialId, AppContext};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject, poem_openapi::Object)]
 #[sea_orm(table_name = "credentials")]
 #[graphql(concrete(name = "Credential", params()))]
+#[oai(rename = "Credential")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
+    #[oai(read_only)]
     pub id: Uuid,
+    #[oai(read_only)]
     pub client_id: String,
+    #[oai(read_only)]
     pub organization_id: Uuid,
     pub name: String,
+    #[oai(read_only)]
     pub created_at: DateTime,
+    #[oai(read_only)]
     pub created_by: Uuid,
 }
 
