@@ -1,13 +1,10 @@
-use async_graphql::{dataloader::DataLoader, *};
+use poem_openapi::Object;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use super::projects::Model as Project;
-use crate::dataloaders::WebhookProjectsLoader;
-
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize, SimpleObject)]
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize, Object)]
 #[sea_orm(table_name = "webhooks")]
-#[graphql(complex, concrete(name = "Webhook", params()))]
+#[oai(rename = "Webhook", read_only_all)]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
@@ -16,13 +13,6 @@ pub struct Model {
     pub created_at: DateTime,
     pub updated_at: Option<DateTime>,
     pub created_by: Uuid,
-}
-#[ComplexObject]
-impl Model {
-    async fn projects(&self, ctx: &Context<'_>) -> Result<Option<Vec<Project>>> {
-        let loader = ctx.data::<DataLoader<WebhookProjectsLoader>>()?;
-        loader.load_one(self.id).await
-    }
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

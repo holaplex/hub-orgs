@@ -1,14 +1,11 @@
 //!
 
 use holaplex_hub_orgs::{
-    build_schema,
-    db::Connection,
-    handlers::{graphql_handler, health, playground},
-    ory_client::OryClient,
-    AppState, Args,
+    apis, db::Connection, handlers::health, ory_client::OryClient, AppState, Args,
 };
 use hub_core::anyhow::Context as AnyhowContext;
-use poem::{get, listener::TcpListener, middleware::AddData, post, EndpointExt, Route, Server};
+use poem::{get, listener::TcpListener, middleware::AddData, EndpointExt, Route, Server};
+use poem_openapi::OpenApiService;
 
 pub fn main() {
     let opts = hub_core::StartConfig {
@@ -28,17 +25,34 @@ pub fn main() {
                 .await
                 .context("failed to get database connection")?;
 
-            let schema = build_schema();
             let ory_client = OryClient::new(ory);
             let svix_client = svix.build_client();
 
-            let state = AppState::new(schema, connection, ory_client, svix_client);
+            let state = AppState::new(connection, ory_client, svix_client);
+
+            let api_service = OpenApiService::new(
+                (
+                    apis::Organizations,
+                    apis::Projects,
+                    apis::Users,
+                    apis::Members,
+                    apis::Credentials,
+                    apis::Invites,
+                    apis::Webhooks,
+                ),
+                "Orgs",
+                "0.1.0",
+            )
+            .server(format!("http://localhost:{port}/v1"));
+            let ui = api_service.swagger_ui();
+            let spec = api_service.spec_endpoint();
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
                     Route::new()
-                        .at("/graphql", post(graphql_handler).with(AddData::new(state)))
-                        .at("/playground", get(playground))
+                        .nest("/v1", api_service.with(AddData::new(state)))
+                        .nest("/", ui)
+                        .at("/spec", spec)
                         .at("/health", get(health)),
                 )
                 .await
