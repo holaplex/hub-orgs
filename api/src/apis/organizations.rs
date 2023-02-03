@@ -1,5 +1,10 @@
 use hub_core::uuid::Uuid;
-use poem::{error::InternalServerError, http::StatusCode, web::Data, Error, Result};
+use poem::{
+    error::InternalServerError,
+    http::StatusCode,
+    web::{Data, Path},
+    Error, Result,
+};
 use poem_openapi::{param::Header, payload::Json, OpenApi};
 use sea_orm::{prelude::*, Set};
 use svix::api::ApplicationIn;
@@ -24,6 +29,27 @@ impl Organizations {
         let conn = state.connection.get();
 
         let organization = organizations::Entity::find_by_id(organization)
+            .one(conn)
+            .await
+            .map_err(InternalServerError)?;
+
+        let organization = organization.ok_or(Error::from_status(StatusCode::NOT_FOUND))?;
+
+        Ok(Json(organization))
+    }
+
+    #[oai(path = "/organizations/{slug}", method = "get")]
+    async fn get_organization_by_slug(
+        &self,
+        state: Data<&AppState>,
+        slug: Path<String>,
+    ) -> Result<Json<organizations::Model>> {
+        let Data(state) = state;
+        let Path(slug) = slug;
+        let conn = state.connection.get();
+
+        let organization = organizations::Entity::find()
+            .filter(organizations::Column::Slug.eq(slug))
             .one(conn)
             .await
             .map_err(InternalServerError)?;
