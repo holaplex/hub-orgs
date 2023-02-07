@@ -125,7 +125,7 @@ impl Credentials {
         Ok(Json(payload))
     }
 
-    #[oai(path = "/credentials/{credential}", method = "delete")]
+    #[oai(path = "/credentials/:credential", method = "delete")]
     async fn delete_credential(
         &self,
         state: Data<&AppState>,

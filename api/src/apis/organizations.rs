@@ -38,7 +38,7 @@ impl Organizations {
         Ok(Json(organization))
     }
 
-    #[oai(path = "/organizations/{slug}", method = "get")]
+    #[oai(path = "/organizations/:slug", method = "get")]
     async fn get_organization_by_slug(
         &self,
         state: Data<&AppState>,

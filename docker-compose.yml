@@ -104,6 +104,7 @@ services:
   #SVIX
   backend:
     image: svix/svix-server
+    platform: linux/amd64
     environment:
       WAIT_FOR: "true"  # We want to wait for the default services
       SVIX_REDIS_DSN: "redis://redis:6379"

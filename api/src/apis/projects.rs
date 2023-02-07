@@ -56,7 +56,7 @@ impl Projects {
         Ok(Json(projects))
     }
 
-    #[oai(path = "/projects/{project}", method = "get")]
+    #[oai(path = "/projects/:project", method = "get")]
     async fn get_project(
         &self,
         state: Data<&AppState>,
