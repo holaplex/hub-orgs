@@ -42,7 +42,7 @@ impl Users {
                     .eq(user)
                     .and(members::Column::RevokedAt.is_null()),
             )
-            .order_by_desc(owners::Column::CreatedAt)
+            .order_by_desc(members::Column::CreatedAt)
             .all(conn)
             .await
             .map_err(InternalServerError)?;
