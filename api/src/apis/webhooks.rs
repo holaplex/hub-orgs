@@ -195,7 +195,7 @@ impl Webhooks {
         Ok(Json(webhooks))
     }
 
-    #[oai(path = "/webhooks/{webhook}", method = "get")]
+    #[oai(path = "/webhooks/:webhook", method = "get")]
     async fn get_webhook(
         &self,
         state: Data<&AppState>,
@@ -222,7 +222,7 @@ impl Webhooks {
         Ok(Json(webhook))
     }
 
-    #[oai(path = "/webhooks/{webhook}", method = "delete")]
+    #[oai(path = "/webhooks/:webhook", method = "delete")]
     async fn delete_webhook(
         &self,
         state: Data<&AppState>,

@@ -66,7 +66,7 @@ impl Invites {
         Ok(Json(invite))
     }
 
-    #[oai(path = "/invites/{invite}/accept", method = "put")]
+    #[oai(path = "/invites/:invite/accept", method = "put")]
     async fn accept_invite(
         &self,
         state: Data<&AppState>,
