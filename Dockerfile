@@ -15,7 +15,7 @@ RUN apt-get update -y && \
 
 FROM chef AS planner
 COPY Cargo.* ./
-COPY app app
+COPY api api
 COPY migration migration
 RUN cargo chef prepare --recipe-path recipe.json
 
@@ -25,7 +25,7 @@ COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
 # Build application
 COPY Cargo.* ./
-COPY app app
+COPY api api
 COPY migration migration
 
 FROM builder AS builder-hub-orgs

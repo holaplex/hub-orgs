@@ -3,15 +3,17 @@
 use poem_openapi::Object;
 use sea_orm::entity::prelude::*;
 
-#[derive(Clone, Debug, Copy, PartialEq, DeriveEntityModel, Eq, Object)]
-#[sea_orm(table_name = "owners")]
-#[oai(rename = "Owner", read_only_all)]
+#[derive(Clone, Copy, Debug, PartialEq, DeriveEntityModel, Eq, Object)]
+#[sea_orm(table_name = "members")]
+#[oai(rename = "Member", read_only_all)]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
     pub user_id: Uuid,
     pub organization_id: Uuid,
     pub created_at: DateTime,
+    #[sea_orm(nullable)]
+    pub revoked_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -33,3 +35,9 @@ impl Related<super::organizations::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+impl Entity {
+    pub fn find_by_user(id: Uuid) -> Select<Self> {
+        Self::find().filter(Column::UserId.eq(id))
+    }
+}

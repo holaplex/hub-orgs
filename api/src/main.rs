@@ -3,7 +3,7 @@
 use holaplex_hub_orgs::{
     apis,
     db::Connection,
-    handlers::{health, login_callback},
+    handlers::{browser_login, browser_organization_select, health},
     ory_client::OryClient,
     AppState, Args,
 };
@@ -11,8 +11,8 @@ use hub_core::anyhow::Context as AnyhowContext;
 use poem::{
     get,
     listener::TcpListener,
-    middleware::{AddData, CookieJarManager},
-    EndpointExt, Route, Server,
+    middleware::{AddData, CookieJarManager, Cors},
+    post, EndpointExt, Route, Server,
 };
 use poem_openapi::OpenApiService;
 
@@ -27,7 +27,6 @@ pub fn main() {
             db,
             ory,
             svix,
-            fqdn,
         } = args;
 
         common.rt.block_on(async move {
@@ -62,11 +61,16 @@ pub fn main() {
                     Route::new()
                         .nest("/v1", api_service.with(AddData::new(state.clone())))
                         .nest("/", ui)
-                        .at(
-                            "/login/callback",
-                            get(login_callback)
+                        .nest(
+                            "/browser",
+                            Route::new()
+                                .at("/login", post(browser_login))
+                                .at(
+                                    "/organizations/:organization/select",
+                                    post(browser_organization_select),
+                                )
                                 .with(AddData::new(state))
-                                .with(AddData::new(fqdn))
+                                .with(Cors::new().allow_credentials(true))
                                 .with(CookieJarManager::new()),
                         )
                         .at("/spec", spec)

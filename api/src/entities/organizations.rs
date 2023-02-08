@@ -19,7 +19,6 @@ pub struct Model {
     pub deactivated_at: Option<DateTime>,
     #[oai(read_only)]
     pub svix_app_id: String,
-    pub slug: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
