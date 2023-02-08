@@ -77,6 +77,14 @@ impl Organizations {
             .await
             .map_err(InternalServerError)?;
 
+        let owner = owners::ActiveModel {
+            user_id: Set(user),
+            organization_id: Set(org_model.id),
+            ..Default::default()
+        };
+
+        owner.insert(conn).await.map_err(InternalServerError)?;
+
         match svix
             .application()
             .create(
@@ -92,23 +100,16 @@ impl Organizations {
             Ok(res) => {
                 let mut org: ActiveModel = org_model.clone().into();
                 org.svix_app_id = Set(res.id);
-                org.update(conn).await.map_err(InternalServerError)?;
 
-                let owner = owners::ActiveModel {
-                    user_id: Set(user),
-                    organization_id: Set(org_model.id),
-                    ..Default::default()
-                };
+                let updated_org_model = org.update(conn).await.map_err(InternalServerError)?;
 
-                owner.insert(conn).await.map_err(InternalServerError)?;
+                Ok(Json(updated_org_model))
             },
             Err(err) => {
                 org_model.delete(conn).await.map_err(InternalServerError)?;
 
-                return Err(InternalServerError(err));
+                Err(InternalServerError(err))
             },
-        };
-
-        Ok(Json(org_model))
+        }
     }
 }
