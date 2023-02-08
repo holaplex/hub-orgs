@@ -16,11 +16,29 @@ use svix::api::Svix;
 
 use crate::ory_client::OryClient;
 
+#[derive(Debug, Clone)]
+pub struct Fqdn(String);
+
+impl From<String> for Fqdn {
+    fn from(s: String) -> Self {
+        Self(s)
+    }
+}
+
+impl fmt::Display for Fqdn {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 #[derive(Debug, clap::Args)]
 #[command(version, author, about)]
 pub struct Args {
     #[arg(short, long, env, default_value_t = 3002)]
     pub port: u16,
+
+    #[arg(long, env)]
+    pub fqdn: Fqdn,
 
     #[command(flatten)]
     pub db: db::DbArgs,

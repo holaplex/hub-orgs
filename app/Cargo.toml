@@ -18,7 +18,7 @@ sea-orm = { version = "^0.10.0", features = [
   "runtime-tokio-rustls",
   "sqlx-postgres",
 ] }
-poem = { version = "1.3.50", features = ["anyhow", "test"] }
+poem = { version = "1.3.50", features = ["anyhow", "test", "cookie"] }
 poem-openapi = { version = "2.0.23", features = [
   "swagger-ui",
   "uuid",
