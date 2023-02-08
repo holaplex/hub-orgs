@@ -5,6 +5,7 @@ use poem::{
     web::{Data, Path},
     Error, Result,
 };
+use chrono::offset::Utc;
 use poem_openapi::{param::Header, payload::Json, OpenApi};
 use sea_orm::{prelude::*, Set};
 use svix::api::ApplicationIn;
@@ -70,8 +71,10 @@ impl Organizations {
         let Data(state) = state;
         let svix = &state.svix_client;
         let conn = state.connection.get();
-        let input = input.0;
-
+        let mut input = input.0;
+        let uuid = Uuid::new_v4(); 
+        input.id = uuid;
+        input.created_at = Utc::now().naive_utc();
         let org_model = organizations::ActiveModel::from(input.clone())
             .insert(conn)
             .await
