@@ -35,3 +35,9 @@ impl Related<super::organizations::Entity> for Entity {
 }
 
 impl ActiveModelBehavior for ActiveModel {}
+
+impl Entity {
+    pub fn find_by_user(id: Uuid) -> Select<Self> {
+        Self::find().filter(Column::UserId.eq(id))
+    }
+}

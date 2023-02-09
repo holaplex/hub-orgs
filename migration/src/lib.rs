@@ -11,6 +11,7 @@ mod m20230121_045004_add_svix_app_id_column_to_organizations_table;
 mod m20230124_165007_webhooks_table;
 mod m20230124_171112_webhook_projects_table;
 mod m20230202_180215_add_slug_to_organizations;
+mod m20230208_144934_drop_slug_from_organizations;
 
 pub struct Migrator;
 
@@ -29,6 +30,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20230124_165007_webhooks_table::Migration),
             Box::new(m20230124_171112_webhook_projects_table::Migration),
             Box::new(m20230202_180215_add_slug_to_organizations::Migration),
+            Box::new(m20230208_144934_drop_slug_from_organizations::Migration),
         ]
     }
 }
