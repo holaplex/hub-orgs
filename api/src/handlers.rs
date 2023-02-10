@@ -1,3 +1,5 @@
+use async_graphql::http::{playground_source, GraphQLPlaygroundConfig};
+use async_graphql_poem::{GraphQLRequest, GraphQLResponse};
 use hub_core::uuid::Uuid;
 use poem::{
     error::InternalServerError,
@@ -5,21 +7,41 @@ use poem::{
     http::StatusCode,
     web::{
         cookie::{Cookie, CookieJar, SameSite},
-        Data, Json, Path,
+        Data, Html, Json, Path,
     },
-    Error, FromRequest, Request, RequestBody, Result,
+    Error, FromRequest, IntoResponse, Request, RequestBody, Result,
 };
 use serde::Serialize;
 
 use crate::{
     entities::{members, owners},
-    AppState,
+    AppContext, AppState, UserID,
 };
 
 const HUB_ORG_COOKIE_NAME: &str = "_hub_org";
 
 #[handler]
 pub fn health() {}
+
+#[handler]
+pub fn playground() -> impl IntoResponse {
+    Html(playground_source(GraphQLPlaygroundConfig::new("/graphql")))
+}
+
+#[handler]
+pub async fn graphql_handler(
+    Data(state): Data<&AppState>,
+    user_id: UserID,
+    req: GraphQLRequest,
+) -> Result<GraphQLResponse> {
+    let context = AppContext::new(state.connection.clone(), user_id);
+
+    Ok(state
+        .schema
+        .execute(req.0.data(context).data(state.ory_client.clone()))
+        .await
+        .into())
+}
 
 pub struct UserId(Uuid);
 

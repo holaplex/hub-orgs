@@ -1,9 +1,9 @@
 //!
 
 use holaplex_hub_orgs::{
-    apis,
+    build_schema,
     db::Connection,
-    handlers::{browser_login, browser_organization_select, health},
+    handlers::{browser_login, browser_organization_select, graphql_handler, health, playground},
     ory_client::OryClient,
     AppState, Args,
 };
@@ -14,7 +14,6 @@ use poem::{
     middleware::{AddData, CookieJarManager, Cors},
     post, EndpointExt, Route, Server,
 };
-use poem_openapi::OpenApiService;
 
 pub fn main() {
     let opts = hub_core::StartConfig {
@@ -34,33 +33,20 @@ pub fn main() {
                 .await
                 .context("failed to get database connection")?;
 
+            let schema = build_schema();
             let ory_client = OryClient::new(ory);
             let svix_client = svix.build_client();
 
-            let state = AppState::new(connection, ory_client, svix_client);
-
-            let api_service = OpenApiService::new(
-                (
-                    apis::Organizations,
-                    apis::Projects,
-                    apis::Users,
-                    apis::Members,
-                    apis::Credentials,
-                    apis::Invites,
-                    apis::Webhooks,
-                ),
-                "Orgs",
-                "0.1.0",
-            )
-            .server(format!("http://localhost:{port}/v1"));
-            let ui = api_service.swagger_ui();
-            let spec = api_service.spec_endpoint();
+            let state = AppState::new(schema, connection, ory_client, svix_client);
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
                     Route::new()
-                        .nest("/v1", api_service.with(AddData::new(state.clone())))
-                        .nest("/", ui)
+                        .at(
+                            "/graphql",
+                            post(graphql_handler).with(AddData::new(state.clone())),
+                        )
+                        .at("/playground", get(playground))
                         .nest(
                             "/browser",
                             Route::new()
@@ -73,7 +59,6 @@ pub fn main() {
                                 .with(Cors::new().allow_credentials(true))
                                 .with(CookieJarManager::new()),
                         )
-                        .at("/spec", spec)
                         .at("/health", get(health)),
                 )
                 .await
