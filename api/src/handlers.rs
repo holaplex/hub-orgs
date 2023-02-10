@@ -84,7 +84,7 @@ pub async fn browser_login(
             cookie_jar.add(cookie);
 
             Ok(Json(LoginCompleteResponse {
-                redirect_path: "/projects".to_string(),
+                redirect_path: "/organization/projects".to_string(),
             }))
         },
         _ => Ok(Json(LoginCompleteResponse {
@@ -135,7 +135,7 @@ pub async fn browser_organization_select(
         cookie_jar.add(cookie);
 
         Ok(Json(OrganizationSelectResponse {
-            redirect_path: "/projects".to_string(),
+            redirect_path: "/organization/projects".to_string(),
         }))
     } else {
         Err(Error::from_string(
