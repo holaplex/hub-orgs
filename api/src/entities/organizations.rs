@@ -73,7 +73,7 @@ impl Organization {
 
         projects::Entity::find()
             .filter(projects::Column::OrganizationId.eq(self.id))
-            .order_by_desc(invites::Column::CreatedAt)
+            .order_by_desc(projects::Column::CreatedAt)
             .all(db.get())
             .await
             .map_err(Into::into)
