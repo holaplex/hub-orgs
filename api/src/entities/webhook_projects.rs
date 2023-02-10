@@ -1,10 +1,10 @@
-use poem_openapi::Object;
+use async_graphql::*;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize, Object)]
+#[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize, SimpleObject)]
 #[sea_orm(table_name = "webhook_projects")]
-#[oai(rename = "WebhookProject", read_only_all)]
+#[graphql(concrete(name = "WebhookProject", params()))]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub webhook_id: Uuid,
