@@ -5,7 +5,7 @@ use holaplex_hub_orgs::{
     db::Connection,
     handlers::{browser_login, browser_organization_select, graphql_handler, health, playground},
     ory_client::OryClient,
-    AppState, Args,
+    proto, AppState, Args,
 };
 use hub_core::anyhow::Context as AnyhowContext;
 use poem::{
@@ -37,7 +37,12 @@ pub fn main() {
             let ory_client = OryClient::new(ory);
             let svix_client = svix.build_client();
 
-            let state = AppState::new(schema, connection, ory_client, svix_client);
+            let producer = common
+                .producer_cfg
+                .build::<proto::OrganizationEvents>()
+                .await?;
+
+            let state = AppState::new(schema, connection, ory_client, svix_client, producer);
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
