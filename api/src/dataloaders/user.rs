@@ -70,10 +70,13 @@ impl DataLoader<Uuid> for OwnerLoader {
 
     async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
         let owners = Entity::find()
-            .filter(Column::Id.is_in(keys.iter().map(ToOwned::to_owned)))
+            .filter(Column::OrganizationId.is_in(keys.iter().map(ToOwned::to_owned)))
             .all(self.db.get())
             .await?;
 
-        Ok(owners.iter().map(|o| (o.id, (*o).into())).collect())
+        Ok(owners
+            .iter()
+            .map(|o| (o.organization_id, (*o).into()))
+            .collect())
     }
 }
