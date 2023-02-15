@@ -8,7 +8,7 @@ use crate::{
         webhook_projects::ActiveModel as WebhookProjectActiveModel,
         webhooks::{self, ActiveModel as WebhookActiveModel, Model as Webhook},
     },
-    AppContext, UserID,
+    AppContext,
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -26,10 +26,9 @@ impl Mutation {
         input: CreateWebhookInput,
     ) -> Result<CreateWebhookPayload> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
-        let UserID(id) = user_id;
         let svix = ctx.data::<Svix>()?;
 
-        let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
+        let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
         // Find organization from database to get the svix app id
         let org = organizations::Entity::find_by_id(input.organization)

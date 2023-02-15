@@ -1,9 +1,10 @@
-use async_graphql::{self, Context, Error, InputObject, Json, Object, Result};
+use async_graphql::{Context, Error, InputObject, Object, Result, SimpleObject};
+use hub_core::chrono::Utc;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
-    entities::{invites, sea_orm_active_enums::InviteStatus},
-    AppContext, UserID,
+    entities::{invites, members, sea_orm_active_enums::InviteStatus},
+    AppContext,
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -21,8 +22,7 @@ impl Mutation {
         input: MemberInput,
     ) -> Result<invites::Model> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
-        let UserID(id) = user_id;
-        let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
+        let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
         let active_model = invites::ActiveModel {
             organization_id: Set(input.organization),
@@ -42,15 +42,51 @@ impl Mutation {
     pub async fn accept_invite(
         &self,
         ctx: &Context<'_>,
-        input: Json<invites::Model>,
-    ) -> Result<invites::Model> {
-        let AppContext { db, .. } = ctx.data::<AppContext>()?;
+        input: AcceptInviteInput,
+    ) -> Result<AcceptInvitePayload> {
+        let AppContext {
+            db,
+            user_id,
+            user_email,
+            ..
+        } = ctx.data::<AppContext>()?;
+        let conn = db.get();
 
-        let mut active_model: invites::ActiveModel = input.0.into();
+        let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
+        let user_email = user_email
+            .clone()
+            .ok_or_else(|| Error::new("X-EMAIL-ID header not found"))?;
+
+        let invite = invites::Entity::find()
+            .filter(invites::Column::Id.eq(input.invite))
+            .one(conn)
+            .await?
+            .ok_or_else(|| Error::new("invite not found"))?;
+
+        if invite.email != user_email {
+            return Err(Error::new("user email does not match the invite"));
+        }
+
+        let mut active_model: invites::ActiveModel = invite.into();
 
         active_model.status = Set(InviteStatus::Accepted);
+        active_model.updated_at = Set(Some(Utc::now().naive_utc()));
 
-        active_model.insert(db.get()).await.map_err(Into::into)
+        let invite = active_model.insert(conn).await?;
+
+        let member = members::ActiveModel {
+            user_id: Set(user_id),
+            organization_id: Set(invite.organization_id),
+            invite_id: Set(invite.id),
+            ..Default::default()
+        };
+
+        let member = member.insert(conn).await?;
+
+        Ok(AcceptInvitePayload {
+            member: member.into(),
+            invite,
+        })
     }
 }
 
@@ -60,4 +96,15 @@ pub struct MemberInput {
     pub organization: Uuid,
     #[graphql(validator(email))]
     pub email: String,
+}
+
+#[derive(Debug, Clone, InputObject)]
+pub struct AcceptInviteInput {
+    pub invite: Uuid,
+}
+
+#[derive(Debug, Clone, SimpleObject)]
+pub struct AcceptInvitePayload {
+    pub invite: invites::Model,
+    pub member: members::Member,
 }

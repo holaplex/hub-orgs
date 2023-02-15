@@ -4,7 +4,7 @@ use svix::api::{ApplicationIn, Svix};
 
 use crate::{
     entities::{organizations, organizations::ActiveModel, owners},
-    AppContext, UserID,
+    AppContext,
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -22,11 +22,10 @@ impl Mutation {
         input: CreateOrganizationInput,
     ) -> Result<organizations::Organization> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
-        let UserID(id) = user_id;
 
         let svix = ctx.data::<Svix>()?;
 
-        let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
+        let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
         let mut org_model = ActiveModel::from(input.clone()).insert(db.get()).await?;
 

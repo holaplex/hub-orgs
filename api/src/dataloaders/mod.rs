@@ -1,4 +1,6 @@
 pub mod credential;
+pub mod invite;
+pub mod member;
 pub mod organization;
 pub mod project;
 pub mod project_credential;
@@ -6,6 +8,8 @@ pub mod user;
 pub mod webhook_projects;
 
 pub use credential::Loader as CredentialLoader;
+pub use invite::MemberLoader as InviteMemberLoader;
+pub use member::InviteLoader as MemberInviteLoader;
 pub use organization::Loader as OrganizationLoader;
 pub use project::Loader as ProjectLoader;
 pub use project_credential::Loader as ProjectCredentialsLoader;
