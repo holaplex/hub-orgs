@@ -5,7 +5,7 @@ jobs:
 
   clippy:
     name: clippy/check/doc
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Install dependencies
         run: |
@@ -40,6 +40,10 @@ jobs:
         with:
           command: clippy
           args: --workspace --all-features
+
+      - name: Replace Schema Registry URL
+        run: |
+          sed -i "s#localhost#eventbus-cluster.stage-hub.svc.cluster.local#g" api/proto.toml
 
       - name: cargo check
         uses: actions-rs/cargo@v1

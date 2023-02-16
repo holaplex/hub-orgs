@@ -5,7 +5,7 @@ on:
       - main
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: release
     steps:
       -
@@ -17,11 +17,29 @@ jobs:
         with:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
+      - 
+        run: docker context create mycontext
+      - 
+        run: docker context use mycontext 
+      - 
         name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v1
         with:
+          buildkitd-flags: --debug
           version: v0.9.1
+          endpoint: mycontext
+     #-
+     #  name: Replace Schema Registry URL (prod)
+     #  if: github.ref == 'refs/heads/main'
+     #  run: |
+     #    sed -i "s#localhost#eventbus-cluster.prod-hub.svc.cluster.local#g" api/proto.toml
+    
+     ## Todo: move to dev after deploying PROD env
+      - 
+        name: Replace Schema Registry URL (stage)
+        if: github.ref == 'refs/heads/main'
+        run: |
+          sed -i "s#localhost#eventbus-cluster.stage-hub.svc.cluster.local#g" api/proto.toml
       -
         name: Build and push hub-orgs
         uses: docker/build-push-action@v3
