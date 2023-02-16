@@ -6,7 +6,7 @@ use sea_orm::{prelude::*, Set};
 use crate::{
     entities::{credentials, project_credentials},
     ory_client::OryClient,
-    AppContext, UserID,
+    AppContext,
 };
 
 #[derive(Debug, Clone, Copy, Default)]
@@ -25,10 +25,9 @@ impl Mutation {
     ) -> Result<CreateCredentialPayload> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
         let ory = ctx.data::<OryClient>()?;
-        let UserID(id) = user_id;
         let connection = db.get();
 
-        let user_id = id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
+        let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
         // ory client post request payload
         let request_payload = OAuth2Client {

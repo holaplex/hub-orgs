@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(
     Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Copy, Enum, Serialize, Deserialize,
 )]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "invitie_status")]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "invite_status")]
 pub enum InviteStatus {
     #[sea_orm(string_value = "accepted")]
     Accepted,

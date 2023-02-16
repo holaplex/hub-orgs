@@ -3,7 +3,7 @@
 use async_graphql::*;
 use sea_orm::entity::prelude::*;
 
-use super::organizations::Organization;
+use super::{invites, organizations::Organization};
 use crate::AppContext;
 
 #[derive(Clone, Copy, Debug, PartialEq, DeriveEntityModel, Eq)]
@@ -16,6 +16,7 @@ pub struct Model {
     pub created_at: DateTime,
     #[sea_orm(nullable)]
     pub revoked_at: Option<DateTime>,
+    pub invite_id: Uuid,
 }
 
 #[derive(Clone, Copy, SimpleObject, Debug)]
@@ -26,6 +27,7 @@ pub struct Member {
     pub organization_id: Uuid,
     pub created_at: DateTime,
     pub revoked_at: Option<DateTime>,
+    pub invite_id: Uuid,
 }
 
 #[ComplexObject]
@@ -38,6 +40,15 @@ impl Member {
 
         organization_loader.load_one(self.organization_id).await
     }
+
+    async fn invite(&self, ctx: &Context<'_>) -> Result<Option<invites::Model>> {
+        let AppContext {
+            member_invite_loader,
+            ..
+        } = ctx.data::<AppContext>()?;
+
+        member_invite_loader.load_one(self.invite_id).await
+    }
 }
 
 impl From<Model> for Member {
@@ -48,6 +59,7 @@ impl From<Model> for Member {
             organization_id,
             created_at,
             revoked_at,
+            invite_id,
         }: Model,
     ) -> Self {
         Self {
@@ -56,6 +68,7 @@ impl From<Model> for Member {
             organization_id,
             created_at,
             revoked_at,
+            invite_id,
         }
     }
 }

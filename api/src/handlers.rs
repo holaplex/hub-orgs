@@ -9,13 +9,13 @@ use poem::{
         cookie::{Cookie, CookieJar, SameSite},
         Data, Html, Json, Path,
     },
-    Error, FromRequest, IntoResponse, Request, RequestBody, Result,
+    Error, IntoResponse, Result,
 };
 use serde::Serialize;
 
 use crate::{
     entities::{members, owners},
-    AppContext, AppState, UserID,
+    AppContext, AppState, UserEmail, UserID,
 };
 
 const HUB_ORG_COOKIE_NAME: &str = "_hub_org";
@@ -32,33 +32,19 @@ pub fn playground() -> impl IntoResponse {
 pub async fn graphql_handler(
     Data(state): Data<&AppState>,
     user_id: UserID,
+    user_email: UserEmail,
     req: GraphQLRequest,
 ) -> Result<GraphQLResponse> {
-    let context = AppContext::new(state.connection.clone(), user_id);
+    let UserID(user_id) = user_id;
+    let UserEmail(user_email) = user_email;
+
+    let context = AppContext::new(state.connection.clone(), user_id, user_email);
 
     Ok(state
         .schema
         .execute(req.0.data(context).data(state.ory_client.clone()))
         .await
         .into())
-}
-
-pub struct UserId(Uuid);
-
-#[poem::async_trait]
-impl<'a> FromRequest<'a> for UserId {
-    async fn from_request(req: &'a Request, _body: &mut RequestBody) -> Result<Self> {
-        let user_id = req
-            .headers()
-            .get("X-USER-ID")
-            .and_then(|value| value.to_str().ok())
-            .ok_or_else(|| Error::from_string("missing user id", StatusCode::BAD_REQUEST))?;
-
-        let user_id = Uuid::parse_str(user_id)
-            .map_err(|_| Error::from_string("invalid uuid", StatusCode::BAD_REQUEST))?;
-
-        Ok(UserId(user_id))
-    }
 }
 
 #[derive(Serialize)]
@@ -70,11 +56,13 @@ pub struct LoginCompleteResponse {
 pub async fn browser_login(
     state: Data<&AppState>,
     cookie_jar: &CookieJar,
-    user_id: UserId,
+    user_id: UserID,
 ) -> Result<Json<LoginCompleteResponse>> {
     let Data(state) = state;
     let conn = state.connection.get();
-    let user_id = user_id.0;
+    let UserID(user_id) = user_id;
+    let user_id = user_id
+        .ok_or_else(|| Error::from_string("X-USER-ID not found", StatusCode::BAD_REQUEST))?;
 
     let owners = owners::Entity::find_by_user(user_id)
         .all(conn)
@@ -124,13 +112,15 @@ pub struct OrganizationSelectResponse {
 pub async fn browser_organization_select(
     state: Data<&AppState>,
     cookie_jar: &CookieJar,
-    user_id: UserId,
+    user_id: UserID,
     organization: Path<Uuid>,
 ) -> Result<Json<OrganizationSelectResponse>> {
     let Data(state) = state;
     let Path(organization) = organization;
+    let UserID(user_id) = user_id;
     let conn = state.connection.get();
-    let user_id = user_id.0;
+    let user_id = user_id
+        .ok_or_else(|| Error::from_string("X-USER-ID not found", StatusCode::BAD_REQUEST))?;
 
     let owners = owners::Entity::find_by_user(user_id)
         .all(conn)

@@ -18,8 +18,8 @@ use async_graphql::{
     EmptySubscription, Schema,
 };
 use dataloaders::{
-    CredentialLoader, MembersLoader, OrganizationLoader, OwnerLoader, ProjectCredentialsLoader,
-    ProjectLoader,
+    CredentialLoader, InviteMemberLoader, MemberInviteLoader, MembersLoader, OrganizationLoader,
+    OwnerLoader, ProjectCredentialsLoader, ProjectLoader,
 };
 use db::Connection;
 use hub_core::{
@@ -80,6 +80,22 @@ impl<'a> FromRequest<'a> for UserID {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct UserEmail(Option<String>);
+
+#[async_trait]
+impl<'a> FromRequest<'a> for UserEmail {
+    async fn from_request(req: &'a Request, _body: &mut RequestBody) -> poem::Result<Self> {
+        let id = req
+            .headers()
+            .get("X-USER-EMAIL")
+            .and_then(|value| value.to_str().ok())
+            .map(std::string::ToString::to_string);
+
+        Ok(Self(id))
+    }
+}
+
 #[derive(Clone)]
 pub struct AppState {
     pub schema: AppSchema,
@@ -107,17 +123,20 @@ impl AppState {
 
 pub struct AppContext {
     pub db: Connection,
-    pub user_id: UserID,
+    pub user_id: Option<Uuid>,
+    pub user_email: Option<String>,
     pub organization_loader: DataLoader<OrganizationLoader>,
     pub members_loader: DataLoader<MembersLoader>,
     pub owner_loader: DataLoader<OwnerLoader>,
     pub project_credentials_loader: DataLoader<ProjectCredentialsLoader>,
     pub project_loader: DataLoader<ProjectLoader>,
     pub credential_loader: DataLoader<CredentialLoader>,
+    pub member_invite_loader: DataLoader<MemberInviteLoader>,
+    pub invite_member_loader: DataLoader<InviteMemberLoader>,
 }
 
 impl AppContext {
-    pub fn new(db: Connection, user_id: UserID) -> Self {
+    pub fn new(db: Connection, user_id: Option<Uuid>, user_email: Option<String>) -> Self {
         let organization_loader =
             DataLoader::new(OrganizationLoader::new(db.clone()), tokio::spawn);
         let members_loader = DataLoader::new(MembersLoader::new(db.clone()), tokio::spawn);
@@ -126,16 +145,23 @@ impl AppContext {
             DataLoader::new(ProjectCredentialsLoader::new(db.clone()), tokio::spawn);
         let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
         let credential_loader = DataLoader::new(CredentialLoader::new(db.clone()), tokio::spawn);
+        let member_invite_loader =
+            DataLoader::new(MemberInviteLoader::new(db.clone()), tokio::spawn);
+        let invite_member_loader =
+            DataLoader::new(InviteMemberLoader::new(db.clone()), tokio::spawn);
 
         Self {
             db,
             user_id,
+            user_email,
             organization_loader,
             members_loader,
             owner_loader,
             project_credentials_loader,
             project_loader,
             credential_loader,
+            member_invite_loader,
+            invite_member_loader,
         }
     }
 }
