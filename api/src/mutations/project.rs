@@ -1,4 +1,4 @@
-use async_graphql::{self, Context, InputObject, Object, Result};
+use async_graphql::{Context, InputObject, Object, Result, SimpleObject};
 use sea_orm::{prelude::*, Set};
 
 use crate::{
@@ -19,13 +19,12 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: CreateProjectInput,
-    ) -> Result<projects::Model> {
+    ) -> Result<CreateProjectPayload> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
 
-        ActiveModel::from(input)
-            .insert(db.get())
-            .await
-            .map_err(Into::into)
+        let project = ActiveModel::from(input).insert(db.get()).await?;
+
+        Ok(CreateProjectPayload { project })
     }
 }
 
@@ -33,6 +32,11 @@ impl Mutation {
 pub struct CreateProjectInput {
     pub organization: Uuid,
     pub name: String,
+}
+
+#[derive(Debug, SimpleObject)]
+pub struct CreateProjectPayload {
+    pub project: projects::Model,
 }
 
 impl From<CreateProjectInput> for ActiveModel {
