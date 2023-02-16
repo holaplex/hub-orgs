@@ -26,6 +26,11 @@ jobs:
             toolchain: nightly-2022-12-11
             override: true
             components: rustfmt, clippy
+
+      - name: Replace Schema Registry URL
+        run: |
+          sed -i "s#localhost#eventbus-cluster.stage-hub.svc.cluster.local#g" api/proto.toml
+
       - uses: actions/cache@v3
         with:
           path: |
@@ -39,11 +44,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: clippy
-          args: --workspace --all-features
-
-      - name: Replace Schema Registry URL
-        run: |
-          sed -i "s#localhost#eventbus-cluster.stage-hub.svc.cluster.local#g" api/proto.toml
+          args: --workspace --all-features 
 
       - name: cargo check
         uses: actions-rs/cargo@v1
