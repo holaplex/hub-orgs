@@ -50,7 +50,7 @@ impl hub_core::producer::Message for proto::OrganizationEvents {
 #[derive(Debug, clap::Args)]
 #[command(version, author, about)]
 pub struct Args {
-    #[arg(short, long, env, default_value_t = 3002)]
+    #[arg(short, long, env, default_value_t = 3003)]
     pub port: u16,
 
     #[command(flatten)]
