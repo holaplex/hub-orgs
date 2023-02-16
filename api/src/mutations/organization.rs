@@ -1,4 +1,4 @@
-use async_graphql::{self, Context, Error, InputObject, Object, Result};
+use async_graphql::{self, Context, Error, InputObject, Object, Result, SimpleObject};
 use sea_orm::{prelude::*, Set};
 use svix::api::{ApplicationIn, Svix};
 
@@ -20,7 +20,7 @@ impl Mutation {
         &self,
         ctx: &Context<'_>,
         input: CreateOrganizationInput,
-    ) -> Result<organizations::Organization> {
+    ) -> Result<CreateOrganizationPayload> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
 
         let svix = ctx.data::<Svix>()?;
@@ -60,13 +60,20 @@ impl Mutation {
             },
         };
 
-        Ok(org_model.into())
+        Ok(CreateOrganizationPayload {
+            organization: org_model.into(),
+        })
     }
 }
 
 #[derive(Debug, InputObject, Clone)]
 pub struct CreateOrganizationInput {
     pub name: String,
+}
+
+#[derive(Debug, SimpleObject, Clone)]
+pub struct CreateOrganizationPayload {
+    pub organization: organizations::Organization,
 }
 
 impl From<CreateOrganizationInput> for ActiveModel {
