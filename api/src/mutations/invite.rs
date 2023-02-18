@@ -63,9 +63,7 @@ impl Mutation {
             .await?
             .ok_or_else(|| Error::new("invite not found"))?;
 
-        if invite.email != user_email {
-            return Err(Error::new("user email does not match the invite"));
-        }
+        validate_email_match(&(invite.email.clone(), user_email))?;
 
         let mut active_model: invites::ActiveModel = invite.into();
 
@@ -81,12 +79,9 @@ impl Mutation {
             ..Default::default()
         };
 
-        let member = member.insert(conn).await?;
+        member.insert(conn).await?;
 
-        Ok(AcceptInvitePayload {
-            member: member.into(),
-            invite,
-        })
+        Ok(AcceptInvitePayload { invite })
     }
 }
 
@@ -106,5 +101,11 @@ pub struct AcceptInviteInput {
 #[derive(Debug, Clone, SimpleObject)]
 pub struct AcceptInvitePayload {
     pub invite: invites::Model,
-    pub member: members::Member,
+}
+
+fn validate_email_match(emails: &(String, String)) -> Result<()> {
+    if emails.0 == emails.1 {
+        return Ok(());
+    }
+    Err(Error::new("user email does not match the invite"))
 }

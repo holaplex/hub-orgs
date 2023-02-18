@@ -4,7 +4,7 @@ use async_graphql::*;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use super::{members, sea_orm_active_enums::InviteStatus};
+use super::{members, organizations, sea_orm_active_enums::InviteStatus};
 use crate::AppContext;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject, Serialize, Deserialize)]
@@ -30,6 +30,15 @@ impl Model {
         } = ctx.data::<AppContext>()?;
 
         invite_member_loader.load_one(self.id).await
+    }
+
+    async fn organization(&self, ctx: &Context<'_>) -> Result<Option<organizations::Organization>> {
+        let AppContext {
+            organization_loader,
+            ..
+        } = ctx.data::<AppContext>()?;
+
+        organization_loader.load_one(self.organization_id).await
     }
 }
 
