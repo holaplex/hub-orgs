@@ -1,5 +1,6 @@
 #![allow(clippy::unused_async)] // async-graphql requires the async keyword
 
+pub mod invite;
 pub mod organization;
 pub mod project;
 pub mod user;
@@ -12,4 +13,5 @@ pub struct Query(
     project::Query,
     user::Query,
     webhook::Query,
+    invite::Query,
 );

@@ -1,4 +1,4 @@
-use async_graphql::{self, Context, Error, Object, Result, SimpleObject, Value};
+use async_graphql::{Context, Error, Object, Result, SimpleObject, Value};
 use hub_core::serde_json;
 use sea_orm::prelude::*;
 use svix::api::{EventTypeOut, Svix};
