@@ -70,7 +70,7 @@ impl Mutation {
         active_model.status = Set(InviteStatus::Accepted);
         active_model.updated_at = Set(Some(Utc::now().naive_utc()));
 
-        let invite = active_model.insert(conn).await?;
+        let invite = active_model.update(conn).await?;
 
         let member = members::ActiveModel {
             user_id: Set(user_id),
