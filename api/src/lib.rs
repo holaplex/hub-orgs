@@ -26,6 +26,7 @@ use hub_core::{
     anyhow::{Error, Result},
     clap,
     prelude::*,
+    producer::Producer,
     tokio,
     uuid::Uuid,
 };
@@ -36,10 +37,20 @@ use svix::api::Svix;
 
 use crate::ory_client::OryClient;
 
+pub mod proto {
+    include!(concat!(env!("OUT_DIR"), "/organization.proto.rs"));
+}
+
+use proto::OrganizationEvents;
+
+impl hub_core::producer::Message for proto::OrganizationEvents {
+    type Key = proto::OrganizationEventKey;
+}
+
 #[derive(Debug, clap::Args)]
 #[command(version, author, about)]
 pub struct Args {
-    #[arg(short, long, env, default_value_t = 3002)]
+    #[arg(short, long, env, default_value_t = 3003)]
     pub port: u16,
 
     #[command(flatten)]
@@ -102,6 +113,7 @@ pub struct AppState {
     pub connection: Connection,
     pub ory_client: OryClient,
     pub svix_client: Svix,
+    pub producer: Producer<OrganizationEvents>,
 }
 
 impl AppState {
@@ -111,12 +123,14 @@ impl AppState {
         connection: Connection,
         ory_client: OryClient,
         svix_client: Svix,
+        producer: Producer<OrganizationEvents>,
     ) -> Self {
         Self {
             schema,
             connection,
             ory_client,
             svix_client,
+            producer,
         }
     }
 }

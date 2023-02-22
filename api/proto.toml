@@ -1,0 +1,6 @@
+[registry]
+endpoint = "http://localhost:8081/"
+
+[schemas]
+organization = 3
+drops = 4

@@ -4,7 +4,7 @@ on: [push, pull_request]
 jobs:
   test:
     name: Cargo Test
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     services:
       postgres:
@@ -39,6 +39,10 @@ jobs:
             override: true
             components: cargo, rustc
 
+      - name: Replace Schema Registry URL
+        run: |
+          sed -i "s#localhost#eventbus-cluster.stage-hub.svc.cluster.local#g" api/proto.toml
+
       - uses: actions/cache@v3
         with:
           path: |
@@ -47,7 +51,7 @@ jobs:
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
             target/
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'rust-toolchain.toml') }}
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'rust-toolchain.toml') }} 
 
       - name: cargo test
         uses: actions-rs/cargo@v1
