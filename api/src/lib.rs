@@ -8,7 +8,6 @@ pub mod db;
 pub mod entities;
 pub mod handlers;
 pub mod mutations;
-pub mod ory_client;
 pub mod queries;
 pub mod svix_client;
 
@@ -18,8 +17,8 @@ use async_graphql::{
     EmptySubscription, Schema,
 };
 use dataloaders::{
-    CredentialLoader, InviteMemberLoader, MemberInviteLoader, MembersLoader, OrganizationLoader,
-    OwnerLoader, ProjectCredentialsLoader, ProjectLoader,
+    InviteMemberLoader, MemberInviteLoader, MembersLoader, OrganizationLoader, OwnerLoader,
+    ProjectLoader,
 };
 use db::Connection;
 use hub_core::{
@@ -34,8 +33,6 @@ use mutations::Mutation;
 use poem::{async_trait, FromRequest, Request, RequestBody};
 use queries::Query;
 use svix::api::Svix;
-
-use crate::ory_client::OryClient;
 
 pub mod proto {
     include!(concat!(env!("OUT_DIR"), "/organization.proto.rs"));
@@ -55,9 +52,6 @@ pub struct Args {
 
     #[command(flatten)]
     pub db: db::DbArgs,
-
-    #[command(flatten)]
-    pub ory: ory_client::OryArgs,
 
     #[command(flatten)]
     pub svix: svix_client::SvixArgs,
@@ -111,7 +105,6 @@ impl<'a> FromRequest<'a> for UserEmail {
 pub struct AppState {
     pub schema: AppSchema,
     pub connection: Connection,
-    pub ory_client: OryClient,
     pub svix_client: Svix,
     pub producer: Producer<OrganizationEvents>,
 }
@@ -121,14 +114,12 @@ impl AppState {
     pub fn new(
         schema: AppSchema,
         connection: Connection,
-        ory_client: OryClient,
         svix_client: Svix,
         producer: Producer<OrganizationEvents>,
     ) -> Self {
         Self {
             schema,
             connection,
-            ory_client,
             svix_client,
             producer,
         }
@@ -142,9 +133,7 @@ pub struct AppContext {
     pub organization_loader: DataLoader<OrganizationLoader>,
     pub members_loader: DataLoader<MembersLoader>,
     pub owner_loader: DataLoader<OwnerLoader>,
-    pub project_credentials_loader: DataLoader<ProjectCredentialsLoader>,
     pub project_loader: DataLoader<ProjectLoader>,
-    pub credential_loader: DataLoader<CredentialLoader>,
     pub member_invite_loader: DataLoader<MemberInviteLoader>,
     pub invite_member_loader: DataLoader<InviteMemberLoader>,
 }
@@ -155,10 +144,7 @@ impl AppContext {
             DataLoader::new(OrganizationLoader::new(db.clone()), tokio::spawn);
         let members_loader = DataLoader::new(MembersLoader::new(db.clone()), tokio::spawn);
         let owner_loader = DataLoader::new(OwnerLoader::new(db.clone()), tokio::spawn);
-        let project_credentials_loader =
-            DataLoader::new(ProjectCredentialsLoader::new(db.clone()), tokio::spawn);
         let project_loader = DataLoader::new(ProjectLoader::new(db.clone()), tokio::spawn);
-        let credential_loader = DataLoader::new(CredentialLoader::new(db.clone()), tokio::spawn);
         let member_invite_loader =
             DataLoader::new(MemberInviteLoader::new(db.clone()), tokio::spawn);
         let invite_member_loader =
@@ -171,9 +157,7 @@ impl AppContext {
             organization_loader,
             members_loader,
             owner_loader,
-            project_credentials_loader,
             project_loader,
-            credential_loader,
             member_invite_loader,
             invite_member_loader,
         }

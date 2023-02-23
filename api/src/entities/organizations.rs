@@ -4,8 +4,8 @@ use async_graphql::*;
 use sea_orm::{entity::prelude::*, QueryOrder};
 use serde::{Deserialize, Serialize};
 
-use super::{credentials, invites, members, owners, projects, sea_orm_active_enums::InviteStatus};
-use crate::{dataloaders::credential::OrganizationId, AppContext};
+use super::{invites, members, owners, projects, sea_orm_active_enums::InviteStatus};
+use crate::AppContext;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
 #[sea_orm(table_name = "organizations")]
@@ -39,13 +39,6 @@ impl Organization {
     async fn owner(&self, ctx: &Context<'_>) -> Result<Option<owners::Owner>> {
         let AppContext { owner_loader, .. } = ctx.data::<AppContext>()?;
         owner_loader.load_one(self.id).await
-    }
-
-    async fn credentials(&self, ctx: &Context<'_>) -> Result<Option<Vec<credentials::Model>>> {
-        let AppContext {
-            credential_loader, ..
-        } = ctx.data::<AppContext>()?;
-        credential_loader.load_one(OrganizationId(self.id)).await
     }
 
     async fn invites(
