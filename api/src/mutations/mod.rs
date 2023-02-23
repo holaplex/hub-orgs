@@ -1,4 +1,3 @@
-pub mod credential;
 pub mod invite;
 pub mod organization;
 pub mod project;
@@ -11,6 +10,5 @@ pub struct Mutation(
     organization::Mutation,
     project::Mutation,
     invite::Mutation,
-    credential::Mutation,
     webhook::Mutation,
 );

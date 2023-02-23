@@ -4,7 +4,6 @@ use holaplex_hub_orgs::{
     build_schema,
     db::Connection,
     handlers::{browser_login, browser_organization_select, graphql_handler, health, playground},
-    ory_client::OryClient,
     proto, AppState, Args,
 };
 use hub_core::anyhow::Context as AnyhowContext;
@@ -21,12 +20,7 @@ pub fn main() {
     };
 
     hub_core::run(opts, |common, args| {
-        let Args {
-            port,
-            db,
-            ory,
-            svix,
-        } = args;
+        let Args { port, db, svix } = args;
 
         common.rt.block_on(async move {
             let connection = Connection::new(db)
@@ -34,7 +28,6 @@ pub fn main() {
                 .context("failed to get database connection")?;
 
             let schema = build_schema();
-            let ory_client = OryClient::new(ory);
             let svix_client = svix.build_client();
 
             let producer = common
@@ -42,7 +35,7 @@ pub fn main() {
                 .build::<proto::OrganizationEvents>()
                 .await?;
 
-            let state = AppState::new(schema, connection, ory_client, svix_client, producer);
+            let state = AppState::new(schema, connection, svix_client, producer);
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
