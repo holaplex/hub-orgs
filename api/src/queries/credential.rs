@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use async_graphql::{ComplexObject, Context, Object, Result, SimpleObject};
+use async_graphql::{ComplexObject, Context, Error, Object, Result, SimpleObject};
 use hub_core::uuid::Uuid;
 use regex::Regex;
 
@@ -41,6 +41,7 @@ pub struct Credential {
 impl Credential {
     #[graphql(requires = "audiences")]
     async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<Model>> {
+        let regex = Regex::new(r"https://holaplex.com/projects/(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})")?;
         let AppContext { project_loader, .. } = ctx.data::<AppContext>()?;
 
         let project_ids = self
@@ -48,12 +49,14 @@ impl Credential {
             .clone()
             .into_iter()
             .map(|audience| {
-                let regex = Regex::new(
-                    r#"https:\\/\\/holaplex\\.com\\/projects\\/(\w{8}-\w{4}-\w{4}-\w{4}-\w{12})"#,
-                )?;
-                let uuid = regex.replace(&audience, "").into_owned();
+                let uuid = regex
+                    .captures(&audience)
+                    .expect("audience captures")
+                    .get(1)
+                    .ok_or_else(|| Error::new("unable to extract project uuid from resource url"))?
+                    .as_str();
 
-                Ok(Uuid::from_str(&uuid)?)
+                Ok(Uuid::from_str(uuid)?)
             })
             .collect::<Result<Vec<Uuid>>>();
 
