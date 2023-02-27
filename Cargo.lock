@@ -1425,6 +1425,7 @@ dependencies = [
  "ory-client",
  "poem",
  "prost 0.11.6",
+ "regex",
  "sea-orm",
  "serde",
  "serde_json",
