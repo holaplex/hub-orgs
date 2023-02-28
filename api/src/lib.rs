@@ -9,7 +9,6 @@ pub mod entities;
 pub mod handlers;
 pub mod mutations;
 pub mod queries;
-pub mod svix_client;
 
 use async_graphql::{
     dataloader::DataLoader,
@@ -32,7 +31,6 @@ use hub_core::{
 use mutations::Mutation;
 use poem::{async_trait, FromRequest, Request, RequestBody};
 use queries::Query;
-use svix::api::Svix;
 
 pub mod proto {
     include!(concat!(env!("OUT_DIR"), "/organization.proto.rs"));
@@ -52,9 +50,6 @@ pub struct Args {
 
     #[command(flatten)]
     pub db: db::DbArgs,
-
-    #[command(flatten)]
-    pub svix: svix_client::SvixArgs,
 }
 
 pub type AppSchema = Schema<Query, Mutation, EmptySubscription>;
@@ -105,7 +100,6 @@ impl<'a> FromRequest<'a> for UserEmail {
 pub struct AppState {
     pub schema: AppSchema,
     pub connection: Connection,
-    pub svix_client: Svix,
     pub producer: Producer<OrganizationEvents>,
 }
 
@@ -114,13 +108,11 @@ impl AppState {
     pub fn new(
         schema: AppSchema,
         connection: Connection,
-        svix_client: Svix,
         producer: Producer<OrganizationEvents>,
     ) -> Self {
         Self {
             schema,
             connection,
-            svix_client,
             producer,
         }
     }

@@ -1360,12 +1360,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hmac-sha256"
-version = "1.1.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc736091aacb31ddaa4cd5f6988b3c21e99913ac846b41f32538c5fae5d71bfe"
-
-[[package]]
 name = "holaplex-hub-core"
 version = "0.1.0"
 source = "git+https://github.com/holaplex/hub-core?branch=stable#b4512209a8c56f1205b84ce05f25a389a8c9b8d8"
@@ -1429,7 +1423,6 @@ dependencies = [
  "sea-orm",
  "serde",
  "serde_json",
- "svix",
 ]
 
 [[package]]
@@ -3321,23 +3314,6 @@ name = "subtle"
 version = "2.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
-
-[[package]]
-name = "svix"
-version = "0.74.1"
-source = "git+https://github.com/holaplex/svix-webhooks?branch=rust-client#330f8a4be1206649b75f3e7209ec164af98b7c5a"
-dependencies = [
- "base64 0.13.1",
- "hmac-sha256",
- "http",
- "reqwest",
- "serde",
- "serde_derive",
- "serde_json",
- "thiserror",
- "time 0.3.17",
- "url",
-]
 
 [[package]]
 name = "syn"
