@@ -1,9 +1,10 @@
 use async_graphql::{self, Context, Error, InputObject, Object, Result, SimpleObject};
+use hub_core::producer::Producer;
 use sea_orm::{prelude::*, Set};
-use svix::api::{ApplicationIn, Svix};
 
 use crate::{
     entities::{organizations, organizations::ActiveModel, owners},
+    proto::{organization_events::Event, Organization, OrganizationEventKey, OrganizationEvents},
     AppContext,
 };
 
@@ -22,43 +23,30 @@ impl Mutation {
         input: CreateOrganizationInput,
     ) -> Result<CreateOrganizationPayload> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
-
-        let svix = ctx.data::<Svix>()?;
+        let producer = ctx.data::<Producer<OrganizationEvents>>()?;
 
         let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
-        let mut org_model = ActiveModel::from(input.clone()).insert(db.get()).await?;
+        let org_model = ActiveModel::from(input.clone()).insert(db.get()).await?;
 
-        match svix
-            .application()
-            .create(
-                ApplicationIn {
-                    name: input.name,
-                    rate_limit: None,
-                    uid: Some(org_model.id.to_string()),
-                },
-                None,
-            )
-            .await
-        {
-            Ok(res) => {
-                let mut org: ActiveModel = org_model.clone().into();
-                org.svix_app_id = Set(res.id);
-                org_model = org.update(db.get()).await?;
-
-                let owner = owners::ActiveModel {
-                    user_id: Set(user_id),
-                    organization_id: Set(org_model.id),
-                    ..Default::default()
-                };
-
-                owner.insert(db.get()).await?;
-            },
-            Err(err) => {
-                org_model.delete(db.get()).await?;
-                return Err(err.into());
-            },
+        let owner = owners::ActiveModel {
+            user_id: Set(user_id),
+            organization_id: Set(org_model.id),
+            ..Default::default()
         };
+
+        owner.insert(db.get()).await?;
+
+        let event = OrganizationEvents {
+            event: Some(Event::OrganizationCreated(org_model.clone().into())),
+        };
+
+        let key = OrganizationEventKey {
+            id: org_model.id.to_string(),
+            user_id: user_id.to_string(),
+        };
+
+        producer.send(Some(&event), Some(&key)).await?;
 
         Ok(CreateOrganizationPayload {
             organization: org_model.into(),
@@ -81,6 +69,25 @@ impl From<CreateOrganizationInput> for ActiveModel {
         Self {
             name: Set(val.name),
             ..Default::default()
+        }
+    }
+}
+
+impl From<organizations::Model> for Organization {
+    fn from(
+        organizations::Model {
+            id,
+            name,
+            created_at,
+            deactivated_at,
+            ..
+        }: organizations::Model,
+    ) -> Self {
+        Self {
+            id: id.to_string(),
+            name,
+            created_at: created_at.to_string(),
+            deactivated_at: deactivated_at.map(|d| d.to_string()).unwrap_or_default(),
         }
     }
 }

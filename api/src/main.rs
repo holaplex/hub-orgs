@@ -20,7 +20,7 @@ pub fn main() {
     };
 
     hub_core::run(opts, |common, args| {
-        let Args { port, db, svix } = args;
+        let Args { port, db } = args;
 
         common.rt.block_on(async move {
             let connection = Connection::new(db)
@@ -28,14 +28,12 @@ pub fn main() {
                 .context("failed to get database connection")?;
 
             let schema = build_schema();
-            let svix_client = svix.build_client();
-
             let producer = common
                 .producer_cfg
                 .build::<proto::OrganizationEvents>()
                 .await?;
 
-            let state = AppState::new(schema, connection, svix_client, producer);
+            let state = AppState::new(schema, connection, producer);
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(
