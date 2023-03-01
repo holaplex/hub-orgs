@@ -16,6 +16,7 @@ mod m20230215_092536_add_invite_id_to_members;
 mod m20230223_114331_drop_credentials_and_project_credentials_tables;
 mod m20230301_000808_delete_webhook_projects_table;
 mod m20230301_000812_delete_webhooks_table;
+mod m20230301_004428_remove_svix_app_id_column;
 
 pub struct Migrator;
 
@@ -39,6 +40,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20230223_114331_drop_credentials_and_project_credentials_tables::Migration),
             Box::new(m20230301_000808_delete_webhook_projects_table::Migration),
             Box::new(m20230301_000812_delete_webhooks_table::Migration),
+            Box::new(m20230301_004428_remove_svix_app_id_column::Migration),
         ]
     }
 }
