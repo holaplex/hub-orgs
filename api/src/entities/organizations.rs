@@ -15,7 +15,7 @@ pub struct Model {
     #[sea_orm(column_type = "Text")]
     pub name: String,
     pub created_at: DateTime,
-    pub deactivated_at: Option<DateTime>
+    pub deactivated_at: Option<DateTime>,
 }
 
 #[derive(Clone, SimpleObject, Debug)]
@@ -88,7 +88,7 @@ impl From<Model> for Organization {
         Self {
             id,
             name,
-            created_at,,
+            created_at,
             deactivated_at,
         }
     }
