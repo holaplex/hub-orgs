@@ -47,21 +47,21 @@ impl Credential {
         let project_ids = self
             .audiences
             .clone()
-            .into_iter()
+            .iter()
             .map(|audience| {
                 let uuid = regex
-                    .captures(&audience)
+                    .captures(audience)
                     .expect("audience captures")
                     .get(1)
                     .ok_or_else(|| Error::new("unable to extract project uuid from resource url"))?
                     .as_str();
 
-                Ok(Uuid::from_str(uuid)?)
+                Uuid::from_str(uuid).map_err(Into::into)
             })
-            .collect::<Result<Vec<Uuid>>>();
+            .collect::<Result<Vec<Uuid>>>()?;
 
         let projects = project_loader
-            .load_many(project_ids?)
+            .load_many(project_ids)
             .await?
             .into_values()
             .collect();
