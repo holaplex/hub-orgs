@@ -48,6 +48,7 @@ impl Mutation {
 pub struct CreateProjectInput {
     pub organization: Uuid,
     pub name: String,
+    pub profile_image_url: Option<String>,
 }
 
 #[derive(Debug, SimpleObject)]
@@ -60,6 +61,7 @@ impl From<CreateProjectInput> for ActiveModel {
         Self {
             organization_id: Set(val.organization),
             name: Set(val.name),
+            profile_image_url: Set(val.profile_image_url),
             ..Default::default()
         }
     }
@@ -73,6 +75,7 @@ impl From<projects::Model> for Project {
             organization_id,
             created_at,
             deactivated_at,
+            ..
         }: projects::Model,
     ) -> Self {
         Self {

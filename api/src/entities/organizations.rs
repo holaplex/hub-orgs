@@ -16,6 +16,8 @@ pub struct Model {
     pub name: String,
     pub created_at: DateTime,
     pub deactivated_at: Option<DateTime>,
+    #[sea_orm(column_type = "Text")]
+    pub profile_image_url: Option<String>,
 }
 
 #[derive(Clone, SimpleObject, Debug)]
@@ -25,6 +27,7 @@ pub struct Organization {
     pub name: String,
     pub created_at: DateTime,
     pub deactivated_at: Option<DateTime>,
+    pub profile_image_url: Option<String>,
 }
 
 #[ComplexObject]
@@ -83,6 +86,7 @@ impl From<Model> for Organization {
             name,
             created_at,
             deactivated_at,
+            profile_image_url,
         }: Model,
     ) -> Self {
         Self {
@@ -90,6 +94,7 @@ impl From<Model> for Organization {
             name,
             created_at,
             deactivated_at,
+            profile_image_url,
         }
     }
 }
