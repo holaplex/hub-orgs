@@ -16,7 +16,7 @@ impl Mutation {
     /// Res
     ///
     /// # Errors
-    /// This function fails if ...
+    /// This function fails if unable to save organization to the database
     pub async fn create_organization(
         &self,
         ctx: &Context<'_>,
@@ -57,6 +57,7 @@ impl Mutation {
 #[derive(Debug, InputObject, Clone)]
 pub struct CreateOrganizationInput {
     pub name: String,
+    pub profile_image_url: Option<String>,
 }
 
 #[derive(Debug, SimpleObject, Clone)]
@@ -68,6 +69,7 @@ impl From<CreateOrganizationInput> for ActiveModel {
     fn from(val: CreateOrganizationInput) -> Self {
         Self {
             name: Set(val.name),
+            profile_image_url: Set(val.profile_image_url),
             ..Default::default()
         }
     }

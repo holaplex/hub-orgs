@@ -17,6 +17,8 @@ pub struct Model {
     pub created_at: DateTime,
     #[sea_orm(nullable)]
     pub deactivated_at: Option<DateTime>,
+    #[sea_orm(column_type = "Text")]
+    pub profile_image_url: Option<String>,
 }
 
 #[ComplexObject]
