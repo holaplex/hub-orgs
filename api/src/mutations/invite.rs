@@ -1,9 +1,10 @@
 use async_graphql::{Context, Error, InputObject, Object, Result, SimpleObject};
-use hub_core::chrono::Utc;
+use hub_core::{chrono::Utc, producer::Producer};
 use sea_orm::{prelude::*, Set};
 
 use crate::{
     entities::{invites, members, sea_orm_active_enums::InviteStatus},
+    proto::{organization_events::Event, Member, OrganizationEventKey, OrganizationEvents},
     AppContext,
 };
 
@@ -51,6 +52,7 @@ impl Mutation {
             ..
         } = ctx.data::<AppContext>()?;
         let conn = db.get();
+        let producer = ctx.data::<Producer<OrganizationEvents>>()?;
 
         let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
         let user_email = user_email
@@ -79,7 +81,20 @@ impl Mutation {
             ..Default::default()
         };
 
-        member.insert(conn).await?;
+        let member_model = member.insert(conn).await?;
+
+        let event = OrganizationEvents {
+            event: Some(Event::MemberAdded(Member {
+                organization_id: invite.organization_id.to_string(),
+            })),
+        };
+
+        let key = OrganizationEventKey {
+            id: member_model.id.to_string(),
+            user_id: user_id.to_string(),
+        };
+
+        producer.send(Some(&event), Some(&key)).await?;
 
         Ok(AcceptInvitePayload { invite })
     }
