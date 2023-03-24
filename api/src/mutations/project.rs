@@ -53,9 +53,10 @@ impl Mutation {
         input: EditProjectInput,
     ) -> Result<EditProjectPayload> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
+        let conn = db.get();
 
         let project = projects::Entity::find_by_id(input.id)
-            .one(db.get())
+            .one(conn)
             .await?
             .ok_or_else(|| Error::new("project not found"))?;
 
@@ -64,7 +65,7 @@ impl Mutation {
         active_project.name = Set(input.name);
         active_project.profile_image_url = Set(input.profile_image_url);
 
-        let project = active_project.update(db.get()).await?;
+        let project = active_project.update(conn).await?;
 
         Ok(EditProjectPayload { project })
     }
