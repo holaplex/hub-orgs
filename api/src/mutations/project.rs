@@ -1,4 +1,4 @@
-use async_graphql::{Context, InputObject, Object, Result, SimpleObject};
+use async_graphql::{Context, Error, InputObject, Object, Result, SimpleObject};
 use hub_core::producer::Producer;
 use sea_orm::{prelude::*, Set};
 
@@ -41,6 +41,32 @@ impl Mutation {
         producer.send(Some(&event), Some(&key)).await?;
 
         Ok(CreateProjectPayload { project })
+    }
+
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if ...
+    pub async fn edit_project(
+        &self,
+        ctx: &Context<'_>,
+        input: EditProjectInput,
+    ) -> Result<EditProjectPayload> {
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
+
+        let project = projects::Entity::find_by_id(input.id)
+            .one(db.get())
+            .await?
+            .ok_or_else(|| Error::new("project not found"))?;
+
+        let mut active_project: projects::ActiveModel = project.into();
+
+        active_project.name = Set(input.name);
+        active_project.profile_image_url = Set(input.profile_image_url);
+
+        let project = active_project.update(db.get()).await?;
+
+        Ok(EditProjectPayload { project })
     }
 }
 
@@ -86,4 +112,16 @@ impl From<projects::Model> for Project {
             deactivated_at: deactivated_at.map(|d| d.to_string()).unwrap_or_default(),
         }
     }
+}
+
+#[derive(Debug, InputObject)]
+pub struct EditProjectInput {
+    pub id: Uuid,
+    pub name: String,
+    pub profile_image_url: Option<String>,
+}
+
+#[derive(Debug, SimpleObject)]
+pub struct EditProjectPayload {
+    pub project: projects::Model,
 }
