@@ -8,10 +8,7 @@ pub struct Query;
 
 #[Object(name = "ProjectQuery")]
 impl Query {
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
+    /// Query a project by it's ID, this query returns `null` if the project does not exist.
     async fn project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Option<projects::Model>> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
 

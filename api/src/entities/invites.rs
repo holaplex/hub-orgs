@@ -7,22 +7,31 @@ use serde::{Deserialize, Serialize};
 use super::{members, organizations, sea_orm_active_enums::InviteStatus};
 use crate::AppContext;
 
+/// An invitation sent to join a Holaplex organization.
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject, Serialize, Deserialize)]
 #[sea_orm(table_name = "invites")]
 #[graphql(complex, concrete(name = "Invite", params()))]
 pub struct Model {
+    /// The ID of the invitation.
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    /// The email address of the user being invited to become a member of the organization.
     pub email: String,
+    /// The status of the invitation.
     pub status: InviteStatus,
+    /// The ID of the organization to which the invitation belongs.
     pub organization_id: Uuid,
+    /// The ID of the user who created the invitation.
     pub created_by: Uuid,
+    /// The datetime, in UTC, when the invitation to join the organization was created.
     pub created_at: DateTime,
+    /// The datetime, in UTC, when the invitation status was updated.
     pub updated_at: Option<DateTime>,
 }
 
 #[ComplexObject]
 impl Model {
+    /// The member record that is generated after the invitation to join the organization is accepted. When the user has not accepted the invitation, this field returns `null`.
     async fn member(&self, ctx: &Context<'_>) -> Result<Option<members::Member>> {
         let AppContext {
             invite_member_loader,
@@ -32,6 +41,7 @@ impl Model {
         invite_member_loader.load_one(self.id).await
     }
 
+    /// The organization to which the invitation to join belongs.
     async fn organization(&self, ctx: &Context<'_>) -> Result<Option<organizations::Organization>> {
         let AppContext {
             organization_loader,

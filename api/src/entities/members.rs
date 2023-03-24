@@ -19,19 +19,27 @@ pub struct Model {
     pub invite_id: Uuid,
 }
 
+/// A member of a Holaplex organization, representing an individual who has been granted access to the organization.
 #[derive(Clone, Copy, SimpleObject, Debug)]
 #[graphql(complex)]
 pub struct Member {
+    /// The unique identifier of the member.
     pub id: Uuid,
+    /// The ID of the user who has been granted access to the Holaplex organization as a member.
     pub user_id: Uuid,
+    /// The ID of the Holaplex organization to which the user has been granted access.
     pub organization_id: Uuid,
+    /// The datetime, in UTC, when the member joined the organization.
     pub created_at: DateTime,
+    /// The datetime, in UTC, when the member was revoked from the organization.
     pub revoked_at: Option<DateTime>,
+    /// The ID of the invitation that the member accepted to join the organization.
     pub invite_id: Uuid,
 }
 
 #[ComplexObject]
 impl Member {
+    /// The Holaplex organization to which the member belongs, representing an individual who has been granted access to the organization.
     async fn organization(&self, ctx: &Context<'_>) -> Result<Option<Organization>> {
         let AppContext {
             organization_loader,
@@ -41,6 +49,7 @@ impl Member {
         organization_loader.load_one(self.organization_id).await
     }
 
+    /// The invitation to join the Holaplex organization that the member accepted in order to gain access to the organization.
     async fn invite(&self, ctx: &Context<'_>) -> Result<Option<invites::Model>> {
         let AppContext {
             member_invite_loader,

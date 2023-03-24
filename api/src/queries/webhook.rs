@@ -36,6 +36,7 @@ pub struct Webhook {
 
 #[ComplexObject]
 impl Webhook {
+    /// This field specifies the list of projects for which an associated object will trigger a webhook event.
     #[graphql(requires = "channels")]
     async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<Model>> {
         let AppContext { project_loader, .. } = ctx.data::<AppContext>()?;

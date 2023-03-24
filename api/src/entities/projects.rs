@@ -6,17 +6,24 @@ use sea_orm::entity::prelude::*;
 use super::organizations::Organization;
 use crate::AppContext;
 
+/// A Holaplex project that belongs to an organization. Projects are used to group unique NFT campaigns or initiatives, and are used to assign objects that end customers will interact with, such as drops and wallets.
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, SimpleObject)]
 #[sea_orm(table_name = "projects")]
 #[graphql(complex, concrete(name = "Project", params()))]
 pub struct Model {
+    /// The unique identifier assigned to the Holaplex project.
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    /// The friendly name assigned to the Holaplex project to differentiate it from other projects belonging to the organization.
     pub name: String,
+    /// The ID of the Holaplex organization to which the project belongs.
     pub organization_id: Uuid,
+    /// The datetime, in UTC, when the project was created.
     pub created_at: DateTime,
     #[sea_orm(nullable)]
+    /// The date and time in Coordinated Universal Time (UTC) when the Holaplex project was created. Once a project is deactivated, objects that were assigned to the project can no longer be interacted with.
     pub deactivated_at: Option<DateTime>,
+    /// The optional profile image associated with the project, which can be used to visually represent the project.
     #[sea_orm(column_type = "Text")]
     pub profile_image_url: Option<String>,
 }

@@ -13,10 +13,9 @@ pub struct Mutation;
 
 #[Object(name = "InviteMutation")]
 impl Mutation {
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
+    /// To invite a person to the organization, provide their email address.
+    /// # Error
+    /// This mutation will produce an error if it is unable to connect to the database or if there is no associated user set in the X-USER-ID header.
     pub async fn invite_member(
         &self,
         ctx: &Context<'_>,
@@ -36,10 +35,9 @@ impl Mutation {
         active_model.insert(db.get()).await.map_err(Into::into)
     }
 
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
+    /// Accept an invite to the organization.
+    /// # Error
+    /// This mutation will produce an error if it is unable to connect to the database or if the user's email does not match the invitation.
     pub async fn accept_invite(
         &self,
         ctx: &Context<'_>,
@@ -100,21 +98,28 @@ impl Mutation {
     }
 }
 
+/// Input required for inviting a member to the organization.
 #[derive(InputObject, Debug)]
 #[graphql(name = "InviteMemberInput")]
 pub struct MemberInput {
+    /// The ID of the organization.
     pub organization: Uuid,
+    /// The email address of the invited user.
     #[graphql(validator(email))]
     pub email: String,
 }
 
+/// Input required for accepting an invitation to the organization.
 #[derive(Debug, Clone, InputObject)]
 pub struct AcceptInviteInput {
+    /// The ID of the invitation.
     pub invite: Uuid,
 }
 
+/// The response returned after accepting an invitation to the organization.
 #[derive(Debug, Clone, SimpleObject)]
 pub struct AcceptInvitePayload {
+    /// The invitation to the organization that has been accepted.
     pub invite: invites::Model,
 }
 

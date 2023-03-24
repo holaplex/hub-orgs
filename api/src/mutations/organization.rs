@@ -13,10 +13,9 @@ pub struct Mutation;
 
 #[Object(name = "OrganizationMutation")]
 impl Mutation {
-    /// Res
-    ///
+    /// This mutation creates a new Holaplex organization, with the user triggering the mutation automatically assigned as the owner of the organization.
     /// # Errors
-    /// This function fails if unable to save organization to the database
+    /// This mutation produces an error if it is unable to connect to the database, emit the organization creation event, or if the user is not set in the X-USER-ID header.
     pub async fn create_organization(
         &self,
         ctx: &Context<'_>,
@@ -54,10 +53,7 @@ impl Mutation {
         })
     }
 
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if unable to update organization to the database
+    /// This mutation edits the name or profile image of the organization.
     pub async fn edit_organization(
         &self,
         ctx: &Context<'_>,
