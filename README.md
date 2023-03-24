@@ -1,6 +1,6 @@
-# Holaplex Hub Orgs
+# Hub Orgs
 
-Management of Holaplex Hub organizations, projects, memberships, API credentials, and webhooks.
+Holaplex Hub orgs manages organizations, projects, and memberships.
 
 ## Getting Started
 

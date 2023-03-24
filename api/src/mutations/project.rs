@@ -13,10 +13,10 @@ pub struct Mutation;
 
 #[Object(name = "ProjectMutation")]
 impl Mutation {
-    /// Res
+    /// This mutation creates a new project under the specified organization.
     ///
     /// # Errors
-    /// This function fails if ...
+    /// This mutation produces an error if it is unable to connect to the database, emit the project creation event, or if the user is not set in the X-USER-ID header.
     pub async fn create_project(
         &self,
         ctx: &Context<'_>,
@@ -43,10 +43,7 @@ impl Mutation {
         Ok(CreateProjectPayload { project })
     }
 
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
+    /// This mutations edits the name and profile image of the project.
     pub async fn edit_project(
         &self,
         ctx: &Context<'_>,
@@ -71,15 +68,25 @@ impl Mutation {
     }
 }
 
+/// The input used for creating a project.
 #[derive(Debug, InputObject)]
 pub struct CreateProjectInput {
+    /// The ID of the organization the project belongs to.
     pub organization: Uuid,
+    /// The friendly name to denote the project from others belonging to the organization.
     pub name: String,
+    /// The URL of the project's profile image.
     pub profile_image_url: Option<String>,
 }
 
+/**
+ * The payload returned by the `createProject` mutation.
+ */
 #[derive(Debug, SimpleObject)]
 pub struct CreateProjectPayload {
+    /**
+     * The project that was created.
+     */
     pub project: projects::Model,
 }
 

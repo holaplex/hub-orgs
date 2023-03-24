@@ -8,10 +8,7 @@ pub struct Query;
 
 #[Object(name = "OrganizationQuery")]
 impl Query {
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
+    /// Query an organization by its ID, this query returns `null` if the organization does not exist.
     async fn organization(
         &self,
         ctx: &Context<'_>,
@@ -25,10 +22,7 @@ impl Query {
             .map(Into::into))
     }
 
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
+    /// Query organization entity by it's ID.
     #[graphql(entity)]
     async fn find_organization_by_id(
         &self,

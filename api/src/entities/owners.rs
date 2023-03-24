@@ -16,17 +16,23 @@ pub struct Model {
     pub created_at: DateTime,
 }
 
+/// The owner of the Holaplex organization, who is the individual that created the organization.
 #[derive(SimpleObject, Clone, Debug, Copy)]
 #[graphql(complex)]
 pub struct Owner {
+    /// The unique identifier assigned to the record of the user who created the Holaplex organization and serves as its owner, which is used to distinguish their record from other records within the Holaplex ecosystem.
     pub id: Uuid,
+    /// The ID of the user who created the Holaplex organization and serves as its owner.
     pub user_id: Uuid,
+    /// The ID assigned to the Holaplex organization owned by the user, which is used to distinguish it from other organizations within the Holaplex ecosystem."
     pub organization_id: Uuid,
+    /// The datetime, in UTC, when the organization was created.
     pub created_at: DateTime,
 }
 
 #[ComplexObject]
 impl Owner {
+    /// The Holaplex organization owned by the user.
     async fn organization(&self, ctx: &Context<'_>) -> Result<Option<Organization>> {
         let AppContext {
             organization_loader,

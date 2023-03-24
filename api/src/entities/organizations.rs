@@ -20,28 +20,37 @@ pub struct Model {
     pub profile_image_url: Option<String>,
 }
 
+/// A Holaplex organization is the top-level account within the Holaplex ecosystem. Each organization has a single owner who can invite members to join. Organizations use projects to organize NFT campaigns or initiatives.
 #[derive(Clone, SimpleObject, Debug)]
 #[graphql(complex)]
 pub struct Organization {
+    /// The unique identifier assigned to the Holaplex organization, which is used to distinguish it from other organizations within the Holaplex ecosystem.
     pub id: Uuid,
+    /// The name given to the Holaplex organization, which is used to identify it within the Holaplex ecosystem and to its members and users.
     pub name: String,
+    /// The datetime, in UTC, when the Holaplex organization was created by its owner.
     pub created_at: DateTime,
+    /// The datetime, in UTC, when the Holaplex organization was deactivated by its owner.
     pub deactivated_at: Option<DateTime>,
+    /// The optional profile image associated with the Holaplex organization, which can be used to visually represent the organization.
     pub profile_image_url: Option<String>,
 }
 
 #[ComplexObject]
 impl Organization {
+    /// The members who have been granted access to the Holaplex organization, represented by individuals who have been invited and accepted the invitation to join the organization.
     async fn members(&self, ctx: &Context<'_>) -> Result<Option<Vec<members::Member>>> {
         let AppContext { members_loader, .. } = ctx.data::<AppContext>()?;
         members_loader.load_one(self.id).await
     }
 
+    /// The owner of the Holaplex organization, who has created the organization and has full control over its settings and members.
     async fn owner(&self, ctx: &Context<'_>) -> Result<Option<owners::Owner>> {
         let AppContext { owner_loader, .. } = ctx.data::<AppContext>()?;
         owner_loader.load_one(self.id).await
     }
 
+    /// The invitations to join the Holaplex organization that have been sent to email addresses and are either awaiting or have been accepted by the recipients.
     async fn invites(
         &self,
         ctx: &Context<'_>,
@@ -67,6 +76,7 @@ impl Organization {
             .map_err(Into::into)
     }
 
+    /// The projects that have been created and are currently associated with the Holaplex organization, which are used to organize NFT campaigns or initiatives within the organization.
     async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<projects::Model>> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
 

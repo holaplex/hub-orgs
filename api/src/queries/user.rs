@@ -6,9 +6,12 @@ use crate::{
     AppContext,
 };
 
+/// An enum type named Affiliation that defines a user's association to an organization. The enum is derived using a Union attribute. It has two variants, each containing an associated data type:
 #[derive(Union)]
 enum Affiliation {
+    /// Owner variant contains a Owner data type, representing the owner of the organization.
     Owner(owners::Owner),
+    /// Member variant contains a Member data type, representing a member of the organization.
     Member(members::Member),
 }
 

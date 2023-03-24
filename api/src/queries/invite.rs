@@ -12,10 +12,7 @@ pub struct Query;
 
 #[Object(name = "InviteQuery")]
 impl Query {
-    /// Res
-    ///
-    /// # Errors
-    /// This function fails if ...
+    /// Retrieve a member invitation by its ID.
     async fn invite(&self, ctx: &Context<'_>, id: Uuid) -> Result<Option<Model>> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
         let conn = db.get();

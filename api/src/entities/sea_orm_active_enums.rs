@@ -4,15 +4,19 @@ use async_graphql::*;
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
+/// The status of a member invitation.
 #[derive(
     Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Copy, Enum, Serialize, Deserialize,
 )]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "invite_status")]
 pub enum InviteStatus {
+    /// The member invitation has been accepted by the invited user.
     #[sea_orm(string_value = "accepted")]
     Accepted,
+    /// The member invitation has been revoked by an existing member of the organization and is no longer valid.
     #[sea_orm(string_value = "revoked")]
     Revoked,
+    /// The member invitation has been sent to the invited user.
     #[sea_orm(string_value = "sent")]
     Sent,
 }
