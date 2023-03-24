@@ -23,11 +23,12 @@ impl Mutation {
         input: CreateOrganizationInput,
     ) -> Result<CreateOrganizationPayload> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
+        let conn = db.get();
         let producer = ctx.data::<Producer<OrganizationEvents>>()?;
 
         let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
-        let org_model = ActiveModel::from(input.clone()).insert(db.get()).await?;
+        let org_model = ActiveModel::from(input.clone()).insert(conn).await?;
 
         let owner = owners::ActiveModel {
             user_id: Set(user_id),
@@ -35,7 +36,7 @@ impl Mutation {
             ..Default::default()
         };
 
-        owner.insert(db.get()).await?;
+        owner.insert(conn).await?;
 
         let event = OrganizationEvents {
             event: Some(Event::OrganizationCreated(org_model.clone().into())),
@@ -50,6 +51,35 @@ impl Mutation {
 
         Ok(CreateOrganizationPayload {
             organization: org_model.into(),
+        })
+    }
+
+    /// Res
+    ///
+    /// # Errors
+    /// This function fails if unable to update organization to the database
+    pub async fn edit_organization(
+        &self,
+        ctx: &Context<'_>,
+        input: EditOrganizationInput,
+    ) -> Result<EditOrganizationPayload> {
+        let AppContext { db, .. } = ctx.data::<AppContext>()?;
+        let conn = db.get();
+
+        let org = organizations::Entity::find_by_id(input.id)
+            .one(conn)
+            .await?
+            .ok_or_else(|| Error::new("organization not found"))?;
+
+        let mut active_org: organizations::ActiveModel = org.into();
+
+        active_org.name = Set(input.name);
+        active_org.profile_image_url = Set(input.profile_image_url);
+
+        let org = active_org.update(conn).await?;
+
+        Ok(EditOrganizationPayload {
+            organization: org.into(),
         })
     }
 }
@@ -92,4 +122,16 @@ impl From<organizations::Model> for Organization {
             deactivated_at: deactivated_at.map(|d| d.to_string()).unwrap_or_default(),
         }
     }
+}
+
+#[derive(Debug, InputObject, Clone)]
+pub struct EditOrganizationInput {
+    pub id: Uuid,
+    pub name: String,
+    pub profile_image_url: Option<String>,
+}
+
+#[derive(Debug, SimpleObject, Clone)]
+pub struct EditOrganizationPayload {
+    pub organization: organizations::Organization,
 }
