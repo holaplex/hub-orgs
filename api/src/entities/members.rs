@@ -17,6 +17,7 @@ pub struct Model {
     #[sea_orm(nullable)]
     pub revoked_at: Option<DateTime>,
     pub invite_id: Uuid,
+    pub deactivated_at: Option<DateTime>,
 }
 
 /// A member of a Holaplex organization, representing an individual who has been granted access to the organization.
@@ -35,6 +36,8 @@ pub struct Member {
     pub revoked_at: Option<DateTime>,
     /// The ID of the invitation that the member accepted to join the organization.
     pub invite_id: Uuid,
+    /// The datetime, in UTC, when the member was deactivated from the organization.
+    pub deactivated_at: Option<DateTime>,
 }
 
 #[ComplexObject]
@@ -69,6 +72,7 @@ impl From<Model> for Member {
             created_at,
             revoked_at,
             invite_id,
+            deactivated_at,
         }: Model,
     ) -> Self {
         Self {
@@ -78,6 +82,7 @@ impl From<Model> for Member {
             created_at,
             revoked_at,
             invite_id,
+            deactivated_at,
         }
     }
 }

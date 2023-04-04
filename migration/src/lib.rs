@@ -19,6 +19,7 @@ mod m20230301_000812_delete_webhooks_table;
 mod m20230301_004428_remove_svix_app_id_column;
 mod m20230306_093249_add_profile_image_url_to_organizations;
 mod m20230306_093255_add_profile_image_url_to_projects;
+mod m20230404_143904_add_deactivated_at_column_to_members_table;
 
 pub struct Migrator;
 
@@ -45,6 +46,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20230301_004428_remove_svix_app_id_column::Migration),
             Box::new(m20230306_093249_add_profile_image_url_to_organizations::Migration),
             Box::new(m20230306_093255_add_profile_image_url_to_projects::Migration),
+            Box::new(m20230404_143904_add_deactivated_at_column_to_members_table::Migration),
         ]
     }
 }
