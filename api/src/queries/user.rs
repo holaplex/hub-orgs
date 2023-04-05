@@ -48,6 +48,7 @@ impl From<members::Model> for Affiliation {
             created_at,
             revoked_at,
             invite_id,
+            deactivated_at,
         }: members::Model,
     ) -> Self {
         Self::Member(members::Member {
@@ -57,6 +58,7 @@ impl From<members::Model> for Affiliation {
             created_at,
             revoked_at,
             invite_id,
+            deactivated_at,
         })
     }
 }
