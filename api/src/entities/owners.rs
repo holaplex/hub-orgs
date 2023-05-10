@@ -13,7 +13,7 @@ pub struct Model {
     pub id: Uuid,
     pub user_id: Uuid,
     pub organization_id: Uuid,
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
 }
 
 /// The owner of the Holaplex organization, who is the individual that created the organization.
@@ -27,7 +27,7 @@ pub struct Owner {
     /// The ID assigned to the Holaplex organization owned by the user, which is used to distinguish it from other organizations within the Holaplex ecosystem."
     pub organization_id: Uuid,
     /// The datetime, in UTC, when the organization was created.
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
 }
 
 #[ComplexObject]

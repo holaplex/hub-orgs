@@ -15,9 +15,9 @@ pub struct Model {
     pub id: Uuid,
     pub name: String,
     pub organization_id: Uuid,
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
     #[sea_orm(nullable)]
-    pub deactivated_at: Option<DateTime>,
+    pub deactivated_at: Option<DateTimeWithTimeZone>,
     #[sea_orm(column_type = "Text")]
     pub profile_image_url: Option<String>,
 }
@@ -33,9 +33,9 @@ pub struct Project {
     /// The ID of the Holaplex organization to which the project belongs.
     pub organization_id: Uuid,
     /// The datetime, in UTC, when the project was created.
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
     /// The date and time in Coordinated Universal Time (UTC) when the Holaplex project was created. Once a project is deactivated, objects that were assigned to the project can no longer be interacted with.
-    pub deactivated_at: Option<DateTime>,
+    pub deactivated_at: Option<DateTimeWithTimeZone>,
     /// The optional profile image associated with the project, which can be used to visually represent the project.
     pub profile_image_url_original: Option<String>,
 }

@@ -24,9 +24,9 @@ pub struct Model {
     /// The ID of the user who created the invitation.
     pub created_by: Uuid,
     /// The datetime, in UTC, when the invitation to join the organization was created.
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
     /// The datetime, in UTC, when the invitation status was updated.
-    pub updated_at: Option<DateTime>,
+    pub updated_at: Option<DateTimeWithTimeZone>,
 }
 
 #[ComplexObject]
