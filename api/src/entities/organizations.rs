@@ -5,7 +5,7 @@ use hub_core::{assets::AssetProxy, url::Url};
 use sea_orm::{entity::prelude::*, Condition, QueryOrder};
 use serde::{Deserialize, Serialize};
 
-use super::{invites, members, owners, projects, sea_orm_active_enums::InviteStatus};
+use super::{invites, members, owners, projects, sea_orm_active_enums::InviteStatus, Project};
 use crate::AppContext;
 
 #[derive(Clone, Debug, PartialEq, Eq, DeriveEntityModel, Serialize, Deserialize)]
@@ -78,7 +78,7 @@ impl Organization {
     }
 
     /// The projects that have been created and are currently associated with the Holaplex organization, which are used to organize NFT campaigns or initiatives within the organization.
-    async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<projects::Model>> {
+    async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<Project>> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
 
         projects::Entity::find()
@@ -87,6 +87,7 @@ impl Organization {
             .all(db.get())
             .await
             .map_err(Into::into)
+            .map(|projects| projects.into_iter().map(|p| p.into()).collect())
     }
 
     async fn profile_image_url(&self, ctx: &Context<'_>) -> Result<Option<String>> {
