@@ -24,6 +24,17 @@ impl Mutation {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
         let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
+        let email = input.email.clone().to_lowercase();
+
+        let invite = invites::Entity::find()
+            .filter(invites::Column::Email.eq(email))
+            .one(db.get())
+            .await?;
+
+        invite
+            .map(|_| ())
+            .ok_or(Error::new("Invite already exists"));
+
         let active_model = invites::ActiveModel {
             organization_id: Set(input.organization),
             email: Set(input.email),
