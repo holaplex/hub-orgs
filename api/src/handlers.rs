@@ -42,7 +42,12 @@ pub async fn graphql_handler(
 
     Ok(state
         .schema
-        .execute(req.0.data(context).data(state.producer.clone()))
+        .execute(
+            req.0
+                .data(context)
+                .data(state.producer.clone())
+                .data(state.asset_proxy.clone()),
+        )
         .await
         .into())
 }
