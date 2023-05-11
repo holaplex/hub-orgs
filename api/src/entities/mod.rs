@@ -6,5 +6,3 @@ pub mod organizations;
 pub mod owners;
 pub mod projects;
 pub mod sea_orm_active_enums;
-
-pub use projects::Project;

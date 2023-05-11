@@ -1,10 +1,7 @@
 use async_graphql::{self, Context, Object, Result};
 use sea_orm::prelude::*;
 
-use crate::{
-    entities::projects::{self, Project},
-    AppContext,
-};
+use crate::{entities::projects, AppContext};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Query;
@@ -12,14 +9,13 @@ pub struct Query;
 #[Object(name = "ProjectQuery")]
 impl Query {
     /// Query a project by it's ID, this query returns `null` if the project does not exist.
-    async fn project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Option<Project>> {
+    async fn project(&self, ctx: &Context<'_>, id: Uuid) -> Result<Option<projects::Model>> {
         let AppContext { db, .. } = ctx.data::<AppContext>()?;
 
         projects::Entity::find_by_id(id)
             .one(db.get())
             .await
             .map_err(Into::into)
-            .map(|p| p.map(Into::into))
     }
 
     /// Res
@@ -31,7 +27,7 @@ impl Query {
         &self,
         ctx: &Context<'_>,
         #[graphql(key)] id: Uuid,
-    ) -> Result<Option<Project>> {
+    ) -> Result<Option<projects::Model>> {
         self.project(ctx, id).await
     }
 }

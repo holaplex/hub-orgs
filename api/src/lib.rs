@@ -22,7 +22,6 @@ use dataloaders::{
 use db::Connection;
 use hub_core::{
     anyhow::{Error, Result},
-    assets::AssetProxy,
     clap,
     prelude::*,
     producer::Producer,
@@ -102,7 +101,6 @@ pub struct AppState {
     pub schema: AppSchema,
     pub connection: Connection,
     pub producer: Producer<OrganizationEvents>,
-    pub asset_proxy: AssetProxy,
 }
 
 impl AppState {
@@ -111,13 +109,11 @@ impl AppState {
         schema: AppSchema,
         connection: Connection,
         producer: Producer<OrganizationEvents>,
-        asset_proxy: AssetProxy,
     ) -> Self {
         Self {
             schema,
             connection,
             producer,
-            asset_proxy,
         }
     }
 }
