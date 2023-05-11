@@ -1,7 +1,7 @@
 use async_graphql::{ComplexObject, Context, Object, Result, SimpleObject};
 use hub_core::uuid::Uuid;
 
-use crate::{entities::Project, AppContext};
+use crate::{entities::projects::Model, AppContext};
 
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Query;
@@ -38,7 +38,7 @@ pub struct Webhook {
 impl Webhook {
     /// This field specifies the list of projects for which an associated object will trigger a webhook event.
     #[graphql(requires = "channels")]
-    async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<Project>> {
+    async fn projects(&self, ctx: &Context<'_>) -> Result<Vec<Model>> {
         let AppContext { project_loader, .. } = ctx.data::<AppContext>()?;
 
         let project_ids = self

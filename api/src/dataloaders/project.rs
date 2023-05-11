@@ -6,10 +6,7 @@ use sea_orm::prelude::*;
 
 use crate::{
     db::Connection,
-    entities::{
-        projects::{Column, Entity},
-        Project,
-    },
+    entities::projects::{Column, Entity, Model},
 };
 
 #[derive(Debug, Clone)]
@@ -27,7 +24,7 @@ impl Loader {
 #[async_trait]
 impl DataLoader<Uuid> for Loader {
     type Error = FieldError;
-    type Value = Project;
+    type Value = Model;
 
     async fn load(&self, keys: &[Uuid]) -> Result<HashMap<Uuid, Self::Value>, Self::Error> {
         let projects = Entity::find()
@@ -37,7 +34,7 @@ impl DataLoader<Uuid> for Loader {
 
         Ok(projects
             .iter()
-            .map(|project| (project.id, project.clone().into()))
+            .map(|project| (project.id, project.clone()))
             .collect())
     }
 }
