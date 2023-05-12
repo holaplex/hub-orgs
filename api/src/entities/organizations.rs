@@ -15,8 +15,8 @@ pub struct Model {
     pub id: Uuid,
     #[sea_orm(column_type = "Text")]
     pub name: String,
-    pub created_at: DateTime,
-    pub deactivated_at: Option<DateTime>,
+    pub created_at: DateTimeWithTimeZone,
+    pub deactivated_at: Option<DateTimeWithTimeZone>,
     #[sea_orm(column_type = "Text")]
     pub profile_image_url: Option<String>,
 }
@@ -30,9 +30,9 @@ pub struct Organization {
     /// The name given to the Holaplex organization, which is used to identify it within the Holaplex ecosystem and to its members and users.
     pub name: String,
     /// The datetime, in UTC, when the Holaplex organization was created by its owner.
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
     /// The datetime, in UTC, when the Holaplex organization was deactivated by its owner.
-    pub deactivated_at: Option<DateTime>,
+    pub deactivated_at: Option<DateTimeWithTimeZone>,
     /// The optional profile image associated with the Holaplex organization, which can be used to visually represent the organization.
     pub profile_image_url_original: Option<String>,
 }

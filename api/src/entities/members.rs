@@ -13,11 +13,11 @@ pub struct Model {
     pub id: Uuid,
     pub user_id: Uuid,
     pub organization_id: Uuid,
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
     #[sea_orm(nullable)]
-    pub revoked_at: Option<DateTime>,
+    pub revoked_at: Option<DateTimeWithTimeZone>,
     pub invite_id: Uuid,
-    pub deactivated_at: Option<DateTime>,
+    pub deactivated_at: Option<DateTimeWithTimeZone>,
 }
 
 /// A member of a Holaplex organization, representing an individual who has been granted access to the organization.
@@ -31,13 +31,13 @@ pub struct Member {
     /// The ID of the Holaplex organization to which the user has been granted access.
     pub organization_id: Uuid,
     /// The datetime, in UTC, when the member joined the organization.
-    pub created_at: DateTime,
+    pub created_at: DateTimeWithTimeZone,
     /// The datetime, in UTC, when the member was revoked from the organization.
-    pub revoked_at: Option<DateTime>,
+    pub revoked_at: Option<DateTimeWithTimeZone>,
     /// The ID of the invitation that the member accepted to join the organization.
     pub invite_id: Uuid,
     /// The datetime, in UTC, when the member was deactivated from the organization.
-    pub deactivated_at: Option<DateTime>,
+    pub deactivated_at: Option<DateTimeWithTimeZone>,
 }
 
 #[ComplexObject]
