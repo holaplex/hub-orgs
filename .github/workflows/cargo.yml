@@ -1,8 +1,19 @@
 name: Cargo
 
-on: [push, pull_request]
-jobs:
+on:
+  push:
+    branches:
+      - main
+      - release
+  pull_request:
+    branches:
+      - "**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
   clippy:
     name: clippy/check/doc
     runs-on: self-hosted
@@ -20,10 +31,10 @@ jobs:
             protobuf-compiler
 
       - uses: actions/checkout@v3
-      - name: Install latest nightly
+      - name: Install latest stable
         uses: actions-rs/toolchain@v1
         with:
-            toolchain: nightly-2022-12-11
+            toolchain: 1.69.0
             override: true
             components: rustfmt, clippy
 
@@ -39,6 +50,7 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'rust-toolchain.toml') }}-v1
+
       - name: cargo clippy
         uses: actions-rs/cargo@v1
         with:
@@ -66,7 +78,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - name: Install latest nightly
+      - name: Install rust nightly
         uses: actions-rs/toolchain@v1
         with:
             toolchain: nightly-2022-12-11
