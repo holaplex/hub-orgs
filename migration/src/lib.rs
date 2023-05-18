@@ -21,6 +21,7 @@ mod m20230306_093249_add_profile_image_url_to_organizations;
 mod m20230306_093255_add_profile_image_url_to_projects;
 mod m20230404_143904_add_deactivated_at_column_to_members_table;
 mod m20230510_154238_set_default_timestamp_to_utc;
+mod m20230518_034509_set_default_timestamp;
 
 pub struct Migrator;
 
@@ -49,6 +50,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20230306_093255_add_profile_image_url_to_projects::Migration),
             Box::new(m20230404_143904_add_deactivated_at_column_to_members_table::Migration),
             Box::new(m20230510_154238_set_default_timestamp_to_utc::Migration),
+            Box::new(m20230518_034509_set_default_timestamp::Migration),
         ]
     }
 }
