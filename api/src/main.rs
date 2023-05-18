@@ -33,7 +33,7 @@ pub fn main() {
                 .build::<proto::OrganizationEvents>()
                 .await?;
 
-            let state = AppState::new(schema, connection, producer);
+            let state = AppState::new(schema, connection, producer, common.asset_proxy);
 
             Server::new(TcpListener::bind(format!("0.0.0.0:{port}")))
                 .run(

@@ -81,7 +81,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(Iden)]
-enum Owners {
+pub enum Owners {
     Table,
     Id,
     OrganizationId,

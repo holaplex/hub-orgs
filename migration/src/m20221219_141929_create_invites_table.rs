@@ -102,7 +102,7 @@ impl MigrationTrait for Migration {
 }
 
 #[derive(Iden)]
-enum Invites {
+pub enum Invites {
     Table,
     Id,
     Email,

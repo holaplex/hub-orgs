@@ -38,7 +38,7 @@ impl Mutation {
 
         // Convert the member to ActiveModel and update the deactivated_at field
         let mut member_am: members::ActiveModel = member.into();
-        member_am.deactivated_at = Set(Some(Utc::now().naive_utc()));
+        member_am.deactivated_at = Set(Some(Utc::now().into()));
 
         // Update the member and return it
         let member = member_am.update(db.get()).await?;

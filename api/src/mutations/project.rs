@@ -3,8 +3,14 @@ use hub_core::producer::Producer;
 use sea_orm::{prelude::*, Set};
 
 use crate::{
-    entities::{projects, projects::ActiveModel},
-    proto::{organization_events::Event, OrganizationEventKey, OrganizationEvents, Project},
+    entities::{
+        projects,
+        projects::{ActiveModel, Project},
+    },
+    proto::{
+        organization_events::Event, OrganizationEventKey, OrganizationEvents,
+        Project as ProtoProject,
+    },
     AppContext,
 };
 
@@ -27,7 +33,7 @@ impl Mutation {
 
         let id = user_id.ok_or_else(|| "X-USER-ID header not found")?;
 
-        let project = ActiveModel::from(input).insert(db.get()).await?;
+        let project: Project = ActiveModel::from(input).insert(db.get()).await?.into();
 
         let event = OrganizationEvents {
             event: Some(Event::ProjectCreated(project.clone().into())),
@@ -62,7 +68,7 @@ impl Mutation {
         active_project.name = Set(input.name);
         active_project.profile_image_url = Set(input.profile_image_url);
 
-        let project = active_project.update(conn).await?;
+        let project: Project = active_project.update(conn).await?.into();
 
         Ok(EditProjectPayload { project })
     }
@@ -87,7 +93,7 @@ pub struct CreateProjectPayload {
     /**
      * The project that was created.
      */
-    pub project: projects::Model,
+    pub project: Project,
 }
 
 impl From<CreateProjectInput> for ActiveModel {
@@ -101,16 +107,16 @@ impl From<CreateProjectInput> for ActiveModel {
     }
 }
 
-impl From<projects::Model> for Project {
+impl From<Project> for ProtoProject {
     fn from(
-        projects::Model {
+        Project {
             id,
             name,
             organization_id,
             created_at,
             deactivated_at,
             ..
-        }: projects::Model,
+        }: Project,
     ) -> Self {
         Self {
             id: id.to_string(),
@@ -131,5 +137,5 @@ pub struct EditProjectInput {
 
 #[derive(Debug, SimpleObject)]
 pub struct EditProjectPayload {
-    pub project: projects::Model,
+    pub project: Project,
 }
