@@ -17,6 +17,7 @@ pub struct Model {
     #[sea_orm(nullable)]
     pub revoked_at: Option<DateTimeWithTimeZone>,
     pub invite_id: Uuid,
+    #[sea_orm(nullable)]
     pub deactivated_at: Option<DateTimeWithTimeZone>,
 }
 
@@ -110,5 +111,11 @@ impl ActiveModelBehavior for ActiveModel {}
 impl Entity {
     pub fn find_by_user(user: Uuid) -> Select<Self> {
         Self::find().filter(Column::UserId.eq(user).and(Column::RevokedAt.is_null()))
+    }
+
+    pub fn find_active_by_user(user: Uuid) -> Select<Self> {
+        Self::find()
+            .filter(Column::UserId.eq(user))
+            .filter(Column::DeactivatedAt.is_null())
     }
 }

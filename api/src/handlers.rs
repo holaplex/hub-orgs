@@ -132,7 +132,7 @@ pub async fn browser_organization_select(
         .await
         .map_err(InternalServerError)?;
 
-    let memberships = members::Entity::find_by_user(user_id)
+    let memberships = members::Entity::find_active_by_user(user_id)
         .all(conn)
         .await
         .map_err(InternalServerError)?;
