@@ -87,7 +87,7 @@ impl Mutation {
 
         // Send an event to a message queue
         let event = OrganizationEvents {
-            event: Some(Event::MemberDeactivated(proto::Member {
+            event: Some(Event::MemberReactivated(proto::Member {
                 organization_id: member.organization_id.to_string(),
             })),
         };
