@@ -15,6 +15,7 @@ pub struct Model {
     /// The ID of the invitation.
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    #[sea_orm(select_as = "text", save_as = "citext")]
     /// The email address of the user being invited to become a member of the organization.
     pub email: String,
     /// The status of the invitation.
