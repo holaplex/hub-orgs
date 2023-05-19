@@ -38,7 +38,11 @@ pub async fn graphql_handler(
     let UserID(user_id) = user_id;
     let UserEmail(user_email) = user_email;
 
-    let context = AppContext::new(state.connection.clone(), user_id, user_email);
+    let context = AppContext::new(
+        state.connection.clone(),
+        user_id,
+        user_email.map(|e| e.to_lowercase()),
+    );
 
     Ok(state
         .schema

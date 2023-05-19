@@ -73,7 +73,7 @@ impl Mutation {
             .await?
             .ok_or_else(|| Error::new("invite not found"))?;
 
-        validate_email_match(&(invite.email.clone(), user_email))?;
+        validate_email_match(&(invite.email.to_lowercase(), user_email))?;
 
         let mut active_model: invites::ActiveModel = invite.into();
 

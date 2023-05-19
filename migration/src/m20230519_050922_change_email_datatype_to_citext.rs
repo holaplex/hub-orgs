@@ -13,12 +13,10 @@ impl MigrationTrait for Migration {
 
         let stmt = Statement::from_string(
             manager.get_database_backend(),
-            r#"create extension citext;"#.to_string(),
+            r#"create extension if not exists citext;"#.to_string(),
         );
 
         db.execute(stmt).await?;
-
-        let db = manager.get_connection();
 
         let stmt = Statement::from_string(
             manager.get_database_backend(),
