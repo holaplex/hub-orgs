@@ -79,7 +79,7 @@ impl User {
             .all(conn)
             .await?;
 
-        let org_members = members::Entity::find_by_user(user_id)
+        let org_members = members::Entity::find_active_by_user(user_id)
             .order_by_desc(members::Column::CreatedAt)
             .all(conn)
             .await?;
