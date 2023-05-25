@@ -15,7 +15,7 @@ build = "build.rs"
 [lib]
 
 [dependencies]
-sea-orm = { version = "^0.10.0", features = [
+sea-orm = { version = "0.11.3", features = [
   "debug-print",
   "runtime-tokio-rustls",
   "sqlx-postgres",

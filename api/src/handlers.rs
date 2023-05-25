@@ -38,7 +38,11 @@ pub async fn graphql_handler(
     let UserID(user_id) = user_id;
     let UserEmail(user_email) = user_email;
 
-    let context = AppContext::new(state.connection.clone(), user_id, user_email);
+    let context = AppContext::new(
+        state.connection.clone(),
+        user_id,
+        user_email.map(|e| e.to_lowercase()),
+    );
 
     Ok(state
         .schema
@@ -132,7 +136,7 @@ pub async fn browser_organization_select(
         .await
         .map_err(InternalServerError)?;
 
-    let memberships = members::Entity::find_by_user(user_id)
+    let memberships = members::Entity::find_active_by_user(user_id)
         .all(conn)
         .await
         .map_err(InternalServerError)?;
