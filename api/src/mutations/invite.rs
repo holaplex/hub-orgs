@@ -49,6 +49,8 @@ impl Mutation {
             ..Default::default()
         };
 
+        let invite = active_model.insert(db.get()).await?;
+
         let event = OrganizationEvents {
             event: Some(Event::InviteCreated(Invite {
                 organization: organization.name,
@@ -57,13 +59,13 @@ impl Mutation {
         };
 
         let key = OrganizationEventKey {
-            id: input.organization.to_string(),
+            id: invite.id.to_string(),
             user_id: user_id.to_string(),
         };
 
         producer.send(Some(&event), Some(&key)).await?;
 
-        active_model.insert(db.get()).await.map_err(Into::into)
+        Ok(invite)
     }
 
     /// Accept an invite to the organization.
