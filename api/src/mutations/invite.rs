@@ -3,8 +3,8 @@ use hub_core::{chrono::Utc, producer::Producer};
 use sea_orm::{prelude::*, Set};
 
 use crate::{
-    entities::{invites, members, sea_orm_active_enums::InviteStatus},
-    proto::{organization_events::Event, Member, OrganizationEventKey, OrganizationEvents},
+    entities::{invites, members, organizations, sea_orm_active_enums::InviteStatus},
+    proto::{organization_events::Event, Invite, Member, OrganizationEventKey, OrganizationEvents},
     AppContext,
 };
 
@@ -22,6 +22,8 @@ impl Mutation {
         input: MemberInput,
     ) -> Result<invites::Model> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
+        let producer = ctx.data::<Producer<OrganizationEvents>>()?;
+
         let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
         let invite = invites::Entity::find()
@@ -34,6 +36,11 @@ impl Mutation {
             return Err(Error::new("Invite already exists"));
         }
 
+        let organization = organizations::Entity::find_by_id(input.organization)
+            .one(db.get())
+            .await?
+            .ok_or_else(|| Error::new("organization not found"))?;
+
         let active_model = invites::ActiveModel {
             organization_id: Set(input.organization),
             email: Set(input.email.to_lowercase()),
@@ -42,7 +49,23 @@ impl Mutation {
             ..Default::default()
         };
 
-        active_model.insert(db.get()).await.map_err(Into::into)
+        let invite = active_model.insert(db.get()).await?;
+
+        let event = OrganizationEvents {
+            event: Some(Event::InviteCreated(Invite {
+                organization: organization.name,
+                email: input.email.to_lowercase(),
+            })),
+        };
+
+        let key = OrganizationEventKey {
+            id: invite.id.to_string(),
+            user_id: user_id.to_string(),
+        };
+
+        producer.send(Some(&event), Some(&key)).await?;
+
+        Ok(invite)
     }
 
     /// Accept an invite to the organization.
