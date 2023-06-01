@@ -4,7 +4,7 @@ use sea_orm::{prelude::*, Set};
 
 use crate::{
     entities::{invites, members, sea_orm_active_enums::InviteStatus},
-    proto::{organization_events::Event, Member, OrganizationEventKey, OrganizationEvents},
+    proto::{organization_events::Event, Member, OrganizationEventKey, OrganizationEvents, Invite},
     AppContext,
 };
 
@@ -22,6 +22,8 @@ impl Mutation {
         input: MemberInput,
     ) -> Result<invites::Model> {
         let AppContext { db, user_id, .. } = ctx.data::<AppContext>()?;
+        let producer = ctx.data::<Producer<OrganizationEvents>>()?;
+        
         let user_id = user_id.ok_or_else(|| Error::new("X-USER-ID header not found"))?;
 
         let invite = invites::Entity::find()
@@ -41,6 +43,21 @@ impl Mutation {
             created_by: Set(user_id),
             ..Default::default()
         };
+
+
+        let event = OrganizationEvents {
+            event: Some(Event::InviteCreated(Invite {
+                organization : input.organization.to_string(),
+                email: input.email.to_lowercase(),
+            })),
+        };
+
+        let key = OrganizationEventKey {
+            id: input.organization.to_string(),
+            user_id: user_id.to_string(),
+        };
+
+        producer.send(Some(&event), Some(&key)).await?;
 
         active_model.insert(db.get()).await.map_err(Into::into)
     }
