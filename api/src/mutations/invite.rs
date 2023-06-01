@@ -3,7 +3,7 @@ use hub_core::{chrono::Utc, producer::Producer};
 use sea_orm::{prelude::*, Set};
 
 use crate::{
-    entities::{invites, members, sea_orm_active_enums::InviteStatus},
+    entities::{invites, members, organizations, sea_orm_active_enums::InviteStatus},
     proto::{organization_events::Event, Invite, Member, OrganizationEventKey, OrganizationEvents},
     AppContext,
 };
@@ -36,6 +36,11 @@ impl Mutation {
             return Err(Error::new("Invite already exists"));
         }
 
+        let organization = organizations::Entity::find_by_id(input.organization)
+            .one(db.get())
+            .await?
+            .ok_or_else(|| Error::new("organization not found"))?;
+
         let active_model = invites::ActiveModel {
             organization_id: Set(input.organization),
             email: Set(input.email.to_lowercase()),
@@ -46,7 +51,7 @@ impl Mutation {
 
         let event = OrganizationEvents {
             event: Some(Event::InviteCreated(Invite {
-                organization: input.organization.to_string(),
+                organization: organization.name,
                 email: input.email.to_lowercase(),
             })),
         };
