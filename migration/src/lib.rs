@@ -23,6 +23,7 @@ mod m20230404_143904_add_deactivated_at_column_to_members_table;
 mod m20230510_154238_set_default_timestamp_to_utc;
 mod m20230518_034509_set_default_timestamp;
 mod m20230519_050922_change_email_datatype_to_citext;
+mod m20230622_150710_remove_unique_org_name_constraint;
 
 pub struct Migrator;
 
@@ -53,6 +54,7 @@ impl MigratorTrait for Migrator {
             Box::new(m20230510_154238_set_default_timestamp_to_utc::Migration),
             Box::new(m20230518_034509_set_default_timestamp::Migration),
             Box::new(m20230519_050922_change_email_datatype_to_citext::Migration),
+            Box::new(m20230622_150710_remove_unique_org_name_constraint::Migration),
         ]
     }
 }
